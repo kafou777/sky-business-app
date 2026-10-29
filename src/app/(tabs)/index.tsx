@@ -144,7 +144,7 @@ export default function Home() {
 
       {brands.length ? (
         <View style={st.sec}>
-          <SecHead title="Marques" sub="Trouvez votre voiture par marque" />
+          <SecHead title="Marques" sub="Trouvez votre voiture par marque" onAll={() => router.push('/marques')} />
           <View style={st.brands}>
             {brands.map((b) => (
               <Pressable key={b.id} accessibilityRole="button" accessibilityLabel={b.nom} onPress={() => go({ type: 'vehicule', marque: String(b.id) })} style={st.brand}>

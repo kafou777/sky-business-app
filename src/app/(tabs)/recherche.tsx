@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputInstance, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BrandCard from '@/components/BrandCard';
 import Icon from '@/components/Icon';
 import { ListingRow } from '@/components/ListingCard';
 import { Button, Chip, Empty, Field, IconButton, Opt, Select } from '@/components/ui';
@@ -140,10 +141,13 @@ export default function Search() {
         onEndReached={() => { if (!loading && page < pages) load(page + 1); }}
         keyboardDismissMode="on-drag"
         ListHeaderComponent={
+          <>
+          {f.type === 'vehicule' && brand ? <BrandCard brand={brand} modele={f.modele} onModele={(v) => setF((o) => ({ ...o, modele: v }))} /> : null}
           <View style={st.countRow}>
             <Text style={st.count}>{loading && page === 1 ? 'Recherche…' : total ? money(total) + ' annonce' + (total > 1 ? 's' : '') : ''}</Text>
             <SortButton value={f.tri} onChange={(v) => set('tri', v)} />
           </View>
+          </>
         }
         ListEmptyComponent={loading ? <ActivityIndicator style={{ marginTop: 40 }} color={C.accent} size="large" /> : err ? (
           <Empty icon="globe" title="Connexion impossible" text={err} action="Réessayer" onAction={() => load(1)} />

@@ -26,7 +26,7 @@ export type Listing = {
 };
 
 export type Term = { id: number; nom: string; slug: string; parent: number };
-export type Brand = { id: number; nom: string; slug: string; annonces: number; logo: string | null; modeles: { id: number; nom: string }[] };
+export type Brand = { id: number; nom: string; slug: string; annonces: number; logo: string | null; description?: string; modeles: { id: number; nom: string }[] };
 export type Catalogue = {
   marques: Brand[]; rubriques: Term[]; carrosseries: Term[]; carburants: Term[]; transmissions: Term[];
   couleurs: Term[]; etats: Term[]; types_de_bien: Term[]; lieux: Term[];
