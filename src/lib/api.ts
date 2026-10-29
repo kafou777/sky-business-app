@@ -132,7 +132,10 @@ export async function api<T = any>(path: string, o: Opts = {}): Promise<{ data: 
   try {
     r = await timed(url, { method: o.method || (body ? 'POST' : 'GET'), headers, body }, o.timeout || 25000);
   } catch (e: any) {
-    throw new ApiError(e?.name === 'AbortError' ? 'Le réseau est lent : la demande a pris trop de temps. Réessayez.' : 'Pas de connexion Internet. Vérifiez votre réseau et réessayez.', 'reseau', 0);
+    const net = e?.name === 'TypeError' && /network|fetch/i.test(String(e?.message || ''));
+    throw new ApiError(e?.name === 'AbortError' ? 'Le réseau est lent : la demande a pris trop de temps. Réessayez.'
+      : net || !e?.message ? 'Pas de connexion Internet. Vérifiez votre réseau et réessayez.'
+      : 'L\'envoi a échoué (' + String(e.message).slice(0, 120) + '). Réessayez.', 'reseau', 0);
   }
   let j: any = null;
   try { j = await r.json(); } catch { /* réponse vide */ }
