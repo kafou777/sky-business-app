@@ -52,7 +52,7 @@ export default function Cotation() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior="padding">
       <Header title="Obtenir une cotation" sub={l.titre} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40, maxWidth: 640, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
         <Text style={st.lead}>Recevez par e-mail une cotation officielle Sky Business pour ce véhicule, calculée sur le tarif affiché ({l.prix ? money(l.prix) + ' FCFA ' + (l.periode ? '/ ' + l.periode : '') : 'prix communiqué dans la cotation'}).</Text>

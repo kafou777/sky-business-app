@@ -5,13 +5,22 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '@/components/Icon';
 import { confirm, Empty, Header, IconButton, info, Loading } from '@/components/ui';
-import { api, Conversation, getConfig, hhmm, Message } from '@/lib/api';
+import { api, Conversation, getConfig, hhmm, Listing, Message } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
 type Thread = { conversation: Conversation; messages: Message[]; ia_ecrit: boolean; supprimes: number[] };
 
 const QUICK_VEH = ['Bonjour, le véhicule est-il toujours disponible ?', 'Le prix est-il négociable ?', 'Où peut-on voir le véhicule ?'];
+const QUICK_LOC = ['Bonjour, le véhicule est-il disponible à la location ?', 'Quelles sont les conditions de location ?', 'Le véhicule est-il disponible avec chauffeur ?'];
+const QUICK_IMMO_LOC = ['Bonjour, le bien est-il toujours disponible à la location ?', 'Quel est le montant de la caution et de l\'avance ?', 'Quand peut-on organiser une visite ?'];
+const QUICK_IMMO = ['Bonjour, le bien est-il toujours disponible ?', 'Les documents (ACD, titre foncier) sont-ils disponibles ?', 'Quand peut-on organiser une visite ?'];
+
+function quickFor(a: Conversation['annonce']) {
+  if (!a) return QUICK_VEH;
+  if (a.type === 'immobilier') return a.location ? QUICK_IMMO_LOC : QUICK_IMMO;
+  return a.location ? QUICK_LOC : QUICK_VEH;
+}
 
 function dayLabel(iso: string) {
   const d = new Date(iso); const now = new Date();
@@ -33,6 +42,7 @@ export default function ConversationScreen() {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [sel, setSel] = useState<number | null>(null);
+  const [kind, setKind] = useState<{ type?: string; location?: boolean } | null>(null);
   const last = useRef(0);
   const busy = useRef(false);
   const list = useRef<FlatList<Message>>(null);
@@ -63,6 +73,14 @@ export default function ConversationScreen() {
     const t = setInterval(poll, 4000);
     return () => clearInterval(t);
   }, [poll, profile, setUnread]);
+
+  // Type de l'annonce (questions suggérées adaptées : véhicule, location, immobilier).
+  const annId = conv?.annonce?.id;
+  const hasType = conv?.annonce?.type !== undefined;
+  useEffect(() => {
+    if (!annId || hasType || kind) return;
+    api<Listing>('/annonces/' + annId).then((r) => setKind({ type: r.data.type, location: r.data.type === 'immobilier' ? r.data.operation === 'location' : r.data.rubrique === 'location' })).catch(() => {});
+  }, [annId, hasType, kind]);
 
   // L'assistant écrit : on regarde plus souvent.
   useEffect(() => {
@@ -106,7 +124,7 @@ export default function ConversationScreen() {
 
   const items = msgs;
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior="padding">
       <Header title={conv.other} sub={conv.annonce?.titre} right={<IconButton name="flag" label="Signaler la conversation" onPress={signaler} color={C.muted} />} />
       {conv.annonce && conv.annonce.lien && !conv.piece ? (
         <Pressable onPress={() => router.push(`/annonce/${conv.annonce!.id}`)} style={st.ann} accessibilityRole="button" accessibilityLabel={'Voir l\'annonce ' + conv.annonce.titre}>
@@ -151,7 +169,7 @@ export default function ConversationScreen() {
         <View style={[st.compose, { paddingBottom: ins.bottom + 8 }]}>
           {!items.length && conv.role === 'buyer' ? (
             <View style={st.quick}>
-              {QUICK_VEH.map((q) => <Pressable key={q} onPress={() => setText(q)} style={st.q}><Text style={st.qText}>{q}</Text></Pressable>)}
+              {quickFor(conv.annonce && !hasType && kind ? { ...conv.annonce, ...kind } : conv.annonce).map((q) => <Pressable key={q} onPress={() => setText(q)} style={st.q}><Text style={st.qText}>{q}</Text></Pressable>)}
             </View>
           ) : null}
           <View style={st.inputRow}>

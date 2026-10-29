@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon, { IconName } from '@/components/Icon';
 import { ListingCard } from '@/components/ListingCard';
 import { IconButton } from '@/components/ui';
-import { api, Brand, getCatalogue, getConfig, intl, Listing } from '@/lib/api';
+import { api, Brand, getCatalogue, getConfig, intl, Listing, money } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
@@ -19,12 +20,12 @@ const SECTIONS: Sec[] = [
   { key: 'immo', title: 'Immobilier', sub: 'Maisons, appartements, terrains', query: { type: 'immobilier' }, params: { type: 'immobilier' } },
 ];
 
-const CATS: { label: string; icon: IconName; params?: Record<string, string>; to?: string }[] = [
-  { label: 'Acheter', icon: 'car', params: { type: 'vehicule', rubrique: 'vente' } },
-  { label: 'Louer', icon: 'key', params: { type: 'vehicule', rubrique: 'location' } },
-  { label: 'Import', icon: 'ship', params: { type: 'vehicule', rubrique: 'import' } },
-  { label: 'Immobilier', icon: 'building', params: { type: 'immobilier' } },
-  { label: 'Pièces', icon: 'wrench', to: '/pieces' },
+const CATS: { label: string; icon: IconName; colors: [string, string]; iconColor?: string; params?: Record<string, string>; to?: string }[] = [
+  { label: 'Acheter', icon: 'car', colors: ['#1a1a9e', '#4f5bff'], params: { type: 'vehicule', rubrique: 'vente' } },
+  { label: 'Louer', icon: 'key', colors: ['#0b7a6d', '#2cc7a8'], params: { type: 'vehicule', rubrique: 'location' } },
+  { label: 'Import', icon: 'ship', colors: ['#d9480f', '#ffa94d'], params: { type: 'vehicule', rubrique: 'import' } },
+  { label: 'Immobilier', icon: 'building', colors: ['#6d28d9', '#c084fc'], params: { type: 'immobilier' } },
+  { label: 'Pièces', icon: 'wrench', colors: ['#f2b000', '#ffd866'], iconColor: '#1b1400', to: '/pieces' },
 ];
 
 export default function Home() {
@@ -35,7 +36,10 @@ export default function Home() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [err, setErr] = useState('');
+  const [counts, setCounts] = useState<{ veh: number; immo: number }>({ veh: 0, immo: 0 });
   const cfg = getConfig();
+  const h = new Date().getHours() * 60 + new Date().getMinutes();
+  const day = h >= 6 * 60 + 45 && h < 17 * 60 + 45;
 
   const load = useCallback(async () => {
     setErr('');
@@ -48,6 +52,8 @@ export default function Home() {
       const r: Record<string, Listing[]> = {};
       SECTIONS.forEach((s, i) => { r[s.key] = secs[i].data; });
       setRows(r);
+      Promise.all([api('/annonces', { query: { type: 'vehicule', per_page: 1, inclure_vendus: 1 } }), api('/annonces', { query: { type: 'immobilier', per_page: 1, inclure_vendus: 1 } })])
+        .then(([a, b]) => setCounts({ veh: a.total, immo: b.total })).catch(() => {});
       getCatalogue().then((c) => setBrands([...c.marques].sort((a, b) => b.annonces - a.annonces).slice(0, 16))).catch(() => {});
     } catch (e: any) {
       setErr(e.message);
@@ -63,21 +69,43 @@ export default function Home() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} tintColor={C.accent} colors={[C.accent]} />}>
       <View style={st.top}>
         <Image source={require('../../../assets/logo-wordmark.png')} style={{ width: 150, height: 39 }} contentFit="contain" accessibilityLabel="Sky Business" />
-        <View style={{ flexDirection: 'row', gap: 4 }}>
+        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
           <IconButton name="heart" label="Mes favoris" onPress={() => router.push('/favoris')} badge={favs.size || undefined} />
+          <Pressable onPress={() => router.push('/vendre')} style={st.sellBtn} accessibilityRole="button" accessibilityLabel="Vendre">
+            <Icon name="plus" size={18} color="#1b1400" stroke={2.6} /><Text style={st.sellText}>Vendre</Text>
+          </Pressable>
         </View>
       </View>
 
-      <Pressable accessibilityRole="search" accessibilityLabel="Rechercher une voiture, une marque, un bien" onPress={() => go({ focus: '1' })} style={st.search}>
-        <Icon name="search" size={20} color={C.muted} />
-        <Text style={st.searchText}>Marque, modèle, ville…</Text>
-        <View style={st.searchBtn}><Icon name="filter" size={18} color={C.white} /></View>
-      </Pressable>
+      <View style={st.hero}>
+        <Image source={day ? require('../../../assets/hero-jour.jpg') : require('../../../assets/hero-soir.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="center" accessibilityLabel="Voitures Sky Business devant le Plateau et le pont Alassane Ouattara" />
+        <LinearGradient colors={['rgba(8,10,40,0.62)', 'rgba(8,10,40,0.05)', 'rgba(8,10,40,0)']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+        <View style={{ padding: 18 }}>
+          <Text style={st.heroSmall}>Quelle que soit la voiture de vos rêves…</Text>
+          <Text style={st.heroBig}>Trouvez-la sur</Text>
+          <Text style={[st.heroBig, { color: C.gold }]}>SkyBusiness</Text>
+        </View>
+      </View>
+      <View style={st.finder}>
+        <Text style={st.finderTitle}>Trouvez la voiture idéale</Text>
+        <Pressable accessibilityRole="search" accessibilityLabel="Rechercher une voiture, une marque, un bien" onPress={() => go({ focus: '1' })} style={st.search}>
+          <Icon name="search" size={20} color={C.muted} />
+          <Text style={st.searchText} numberOfLines={1}>Essayez « Toyota Prado 2020 »</Text>
+        </Pressable>
+        <Pressable onPress={() => go({ type: 'vehicule' })} style={st.finderBtn} accessibilityRole="button">
+          <Text style={st.finderBtnText}>{counts.veh ? 'Recherche parmi ' + money(counts.veh) + ' voitures' : 'Rechercher une voiture'}</Text>
+        </Pressable>
+        <Text style={st.finderTag}>Le meilleur endroit pour acheter, vendre ou louer votre véhicule en Côte d'Ivoire</Text>
+        {counts.veh ? <Text style={st.finderSub}>{money(counts.veh)} véhicules et {money(counts.immo)} biens immobiliers, vérifiés par Sky Business.</Text> : null}
+      </View>
 
       <View style={st.cats}>
         {CATS.map((c) => (
-          <Pressable key={c.label} accessibilityRole="button" accessibilityLabel={c.label} onPress={() => (c.to ? router.push(c.to as any) : go(c.params!))} style={st.cat}>
-            <View style={st.catIcon}><Icon name={c.icon} size={26} color={C.accent} /></View>
+          <Pressable key={c.label} accessibilityRole="button" accessibilityLabel={c.label} onPress={() => (c.to ? router.push(c.to as any) : go(c.params!))} style={({ pressed }) => [st.cat, pressed && { transform: [{ scale: 0.96 }] }]}>
+            <LinearGradient colors={c.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.catIcon}>
+              <View style={st.catShine} />
+              <Icon name={c.icon} size={28} color={c.iconColor || C.white} stroke={2.2} />
+            </LinearGradient>
             <Text style={st.catText}>{c.label}</Text>
           </Pressable>
         ))}
@@ -97,13 +125,19 @@ export default function Home() {
 
       {SECTIONS.slice(0, 2).map((s) => <Row key={s.key} s={s} data={rows[s.key]} onAll={() => go(s.params)} />)}
 
-      <Pressable accessibilityRole="button" onPress={() => router.push('/pieces')} style={st.banner}>
-        <View style={[st.catIcon, { backgroundColor: C.white }]}><Icon name="wrench" size={26} color={C.goldFg} /></View>
-        <View style={{ flex: 1 }}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Commander une pièce détachée" onPress={() => router.push('/pieces')} style={({ pressed }) => [st.banner, pressed && { opacity: 0.92 }]}>
+        <LinearGradient colors={['#0f1233', '#1a1a9e']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <View style={st.glow} />
+        <View style={{ flex: 1, gap: 6, zIndex: 1 }}>
+          <Text style={st.bannerKicker}>PIÈCES AUTO</Text>
           <Text style={st.bannerTitle}>Pièces détachées</Text>
           <Text style={st.bannerText}>Dites-nous la pièce recherchée : Sky Business la trouve pour vous.</Text>
+          <View style={st.bannerCta}><Text style={st.bannerCtaText}>Commander</Text><Icon name="next" size={16} color="#1b1400" stroke={2.6} /></View>
         </View>
-        <Icon name="next" size={22} color={C.goldFg} />
+        <View style={st.partsArt}>
+          <View style={[st.partsCircle, { backgroundColor: 'rgba(242,176,0,0.18)' }]}><Icon name="gear" size={54} color={C.gold} stroke={1.6} /></View>
+          <View style={st.partsWrench}><Icon name="wrench" size={30} color="#1b1400" stroke={2.2} /></View>
+        </View>
       </Pressable>
 
       {SECTIONS.slice(2).map((s) => <Row key={s.key} s={s} data={rows[s.key]} onAll={() => go(s.params)} />)}
@@ -169,12 +203,24 @@ function Row({ s, data, onAll }: { s: Sec; data?: Listing[]; onAll: () => void }
 
 const st = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 10 },
-  search: { marginHorizontal: 16, height: 54, borderRadius: R.lg, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.line, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 6, gap: 10 },
+  sellBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.gold, borderRadius: R.md, paddingHorizontal: 14, height: 42 },
+  sellText: { fontFamily: F.bold, fontSize: 15, color: '#1b1400' },
+  hero: { marginHorizontal: 16, height: 290, borderRadius: 26, overflow: 'hidden', backgroundColor: '#0f1233' },
+  heroSmall: { fontFamily: F.semi, fontSize: 14.5, color: C.white },
+  heroBig: { fontFamily: F.display, fontSize: 32, lineHeight: 36, color: C.white, letterSpacing: -0.5 },
+  finder: { marginHorizontal: 26, marginTop: -44, backgroundColor: C.white, borderRadius: 24, padding: 18, gap: 12, shadowColor: '#0f1233', shadowOpacity: 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
+  finderTitle: { fontFamily: F.display, fontSize: 23, color: C.fg },
+  finderBtn: { height: 54, borderRadius: R.pill, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
+  finderBtnText: { fontFamily: F.display, fontSize: 17, color: C.white },
+  finderTag: { fontFamily: F.bold, fontSize: 14.5, lineHeight: 20, color: C.fg, textAlign: 'center' },
+  finderSub: { fontFamily: F.body, fontSize: 13, lineHeight: 18, color: C.muted, textAlign: 'center', marginTop: -6 },
+  search: { height: 52, borderRadius: R.pill, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 },
   searchText: { flex: 1, fontFamily: F.body, fontSize: 16, color: C.faint },
   searchBtn: { width: 42, height: 42, borderRadius: 12, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
-  cats: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, marginTop: 18 },
+  cats: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, marginTop: 24 },
   cat: { alignItems: 'center', gap: 6, flex: 1 },
-  catIcon: { width: 58, height: 58, borderRadius: 18, backgroundColor: C.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  catIcon: { width: 62, height: 62, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: '#0f1233', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  catShine: { position: 'absolute', top: -18, left: -10, width: 52, height: 40, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.22)', transform: [{ rotate: '-20deg' }] },
   catText: { fontFamily: F.semi, fontSize: 12.5, color: C.fg },
   sec: { marginTop: 26 },
   secHead: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 12 },
@@ -184,9 +230,16 @@ const st = StyleSheet.create({
   allText: { fontFamily: F.bold, fontSize: 14, color: C.accent },
   rowList: { paddingHorizontal: 16, gap: 12, flexDirection: 'row' },
   skeleton: { width: 250, height: 260, borderRadius: R.lg, backgroundColor: C.surface },
-  banner: { marginHorizontal: 16, marginTop: 26, backgroundColor: C.goldSoft, borderRadius: R.lg, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#f6dc8f' },
-  bannerTitle: { fontFamily: F.display, fontSize: 18, color: C.fg },
-  bannerText: { fontFamily: F.body, fontSize: 13.5, color: C.goldFg, lineHeight: 18 },
+  banner: { marginHorizontal: 16, marginTop: 26, borderRadius: 24, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 10, overflow: 'hidden', minHeight: 160 },
+  glow: { position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(242,176,0,0.16)' },
+  bannerKicker: { fontFamily: F.bold, fontSize: 11.5, letterSpacing: 1.2, color: C.gold },
+  bannerTitle: { fontFamily: F.display, fontSize: 22, color: C.white },
+  bannerText: { fontFamily: F.body, fontSize: 13.5, color: '#d9dcff', lineHeight: 19 },
+  bannerCta: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: C.gold, borderRadius: R.pill, paddingHorizontal: 14, paddingVertical: 8, marginTop: 4 },
+  bannerCtaText: { fontFamily: F.bold, fontSize: 14, color: '#1b1400' },
+  partsArt: { width: 104, height: 104, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
+  partsCircle: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center' },
+  partsWrench: { position: 'absolute', bottom: 2, right: 0, width: 48, height: 48, borderRadius: 24, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#14156b' },
   brands: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 8 },
   brand: { width: '23%', flexGrow: 1, alignItems: 'center', gap: 4, paddingVertical: 10, borderRadius: R.md, borderWidth: 1, borderColor: C.line, backgroundColor: C.white },
   brandText: { fontFamily: F.semi, fontSize: 11.5, color: C.fg, paddingHorizontal: 4 },

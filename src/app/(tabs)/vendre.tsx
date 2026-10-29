@@ -11,7 +11,7 @@ import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
 
 type Form = Record<string, string>;
-const DRAFT = 'sky_brouillon_annonce';
+const DRAFT = 'sky_brouillon_annonce_v2';
 const INIT: Form = { categorie: 'vente', marque: '', modele: '', annee: '', kilometrage: '', carburant: '', transmission: '', carrosserie: '', couleur: '', etat: '', puissance: '', prix: '', telephone: '', lieu: '', quartier: '', description: '', provenance: '', prix_periode: 'jour', immo_titre: '', immo_statut: 'louer', type_de_bien: '', immo_periode: 'mois', type_vendeur: '', entreprise: '', une: '', une_jours: '0' };
 
 export default function Vendre() {
@@ -101,7 +101,7 @@ export default function Vendre() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior="padding">
       <ScrollView ref={scroll} contentContainerStyle={{ padding: 16, paddingTop: ins.top + 12, paddingBottom: 40, gap: 16, maxWidth: 640, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
         <Text style={st.h1}>{staff ? 'Publier une annonce' : 'Vendre mon véhicule'}</Text>
         <Text style={st.lead}>{staff ? 'Compte administrateur : l\'annonce est mise en ligne directement.' : 'Votre annonce sera vérifiée par Sky Business avant sa mise en ligne.'}</Text>

@@ -47,7 +47,7 @@ export default function Root() {
   }, []);
 
   if (!fonts || (!cfg && !err)) {
-    return <View style={st.splash}><Image source={require('../../assets/logo.png')} style={{ width: 200, height: 142 }} contentFit="contain" /></View>;
+    return <View style={st.splash}><Image source={require('../../assets/logo-wordmark.png')} style={{ width: 260, height: 68 }} contentFit="contain" /></View>;
   }
   if (!cfg) {
     return (

@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import GoogleButton from '@/components/GoogleButton';
 import { Button, Field, IconButton, Notice, Segmented } from '@/components/ui';
 import { api, getConfig } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -11,7 +12,7 @@ import { C, F, R } from '@/lib/theme';
 
 export default function Connexion() {
   const ins = useSafeAreaInsets();
-  const { login, register } = useSession();
+  const { login, register, refresh } = useSession();
   const cfg = getConfig();
   const [tab, setTab] = useState<'connexion' | 'inscription' | 'oubli'>('connexion');
   const [d, setD] = useState({ identifiant: '', mot_de_passe: '', nom: '', telephone: '', email: '', type_vendeur: '', entreprise: '' });
@@ -41,7 +42,7 @@ export default function Connexion() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior="padding">
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: ins.top + (Platform.OS === 'ios' ? 12 : 16), paddingBottom: ins.bottom + 30, gap: 16, maxWidth: 520, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Image source={require('../../assets/logo-wordmark.png')} style={{ width: 150, height: 39 }} contentFit="contain" accessibilityLabel="Sky Business" />
@@ -55,6 +56,13 @@ export default function Connexion() {
         ) : null}
 
         {msg ? <Notice text={msg.t} kind={msg.k} /> : null}
+
+        {tab !== 'oubli' ? (
+          <>
+            <GoogleButton onDone={async () => { await refresh(); done(); }} onError={(m) => setMsg({ t: m, k: 'err' })} />
+            <View style={st.or}><View style={st.line} /><Text style={st.orText}>ou</Text><View style={st.line} /></View>
+          </>
+        ) : null}
 
         {tab === 'connexion' ? (
           <>
@@ -95,6 +103,9 @@ export default function Connexion() {
 }
 
 const st = StyleSheet.create({
+  or: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  line: { flex: 1, height: 1, backgroundColor: C.line },
+  orText: { fontFamily: F.semi, fontSize: 13, color: C.muted },
   title: { fontFamily: F.display, fontSize: 28, color: C.fg, marginTop: 6 },
   lead: { fontFamily: F.body, fontSize: 15, color: C.muted, lineHeight: 21, marginTop: -6 },
   label: { fontFamily: F.semi, fontSize: 14, color: C.fg, marginBottom: -6 },

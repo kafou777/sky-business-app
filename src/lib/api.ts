@@ -20,6 +20,9 @@ export type Listing = {
   provenance?: string; periode?: string; type_de_bien?: string; operation?: 'location' | 'vente';
   description?: string; a_moi?: boolean; cotation?: boolean; quartier?: string; contact?: Contact;
   statut?: string; statut_label?: string;
+  desc_ia?: string; intel?: { points?: [string, string, string][]; resume?: string } | [];
+  marque_id?: number; carte?: { lieu: string; embed: string; lien: string };
+  vendeur?: { id: number; sky: boolean; annonces: number; depuis: string };
 };
 
 export type Term = { id: number; nom: string; slug: string; parent: number };
@@ -43,7 +46,7 @@ export type Profile = {
 };
 export type Conversation = {
   id: number; role: 'buyer' | 'seller'; other: string; repondre: boolean; piece: boolean; whatsapp: string;
-  annonce: { id: number; titre: string; lien: string; photo: string; prix: string } | null;
+  annonce: { id: number; titre: string; lien: string; photo: string; prix: string; type?: string; location?: boolean } | null;
   dernier: { moi: boolean; texte: string; date: string } | null; non_lus: number; signalee: boolean;
   [k: string]: unknown;
 };

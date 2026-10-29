@@ -1,30 +1,37 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import Icon from './Icon';
 import { info } from './ui';
 import { C, F, R } from '@/lib/theme';
 
-export type Photo = { uri: string; name: string; type: string };
+export type Photo = { uri: string; name: string; type: string; width?: number; height?: number; key?: string };
 
-/** Réduit la photo (1600 px, JPEG) : envoi plus rapide sur les réseaux mobiles. */
-async function shrink(a: ImagePicker.ImagePickerAsset, i: number): Promise<Photo> {
+let seq = 0;
+/** Photo choisie : on garde l'original (affichage fiable), la réduction se fait au moment de l'envoi. */
+function fromAsset(a: ImagePicker.ImagePickerAsset): Photo {
+  seq += 1;
+  return { uri: a.uri, name: `photo-${Date.now()}-${seq}.jpg`, type: a.mimeType || 'image/jpeg', width: a.width, height: a.height, key: `${Date.now()}-${seq}` };
+}
+
+/** Réduit la photo (1600 px max, JPEG) juste avant l'envoi : plus rapide sur les réseaux mobiles. */
+async function shrink(p: Photo): Promise<Photo> {
+  if (Platform.OS === 'web') return p;
   try {
-    const ctx = ImageManipulator.manipulate(a.uri);
-    const big = Math.max(a.width || 0, a.height || 0);
-    if (big > 1600) ctx.resize(a.width >= a.height ? { width: 1600 } : { height: 1600 });
-    const img = await ctx.renderAsync();
-    const r = await img.saveAsync({ compress: 0.72, format: SaveFormat.JPEG });
-    return { uri: r.uri, name: `photo-${Date.now()}-${i}.jpg`, type: 'image/jpeg' };
+    const big = Math.max(p.width || 0, p.height || 0);
+    const actions = big > 1600 ? [{ resize: (p.width || 0) >= (p.height || 0) ? { width: 1600 } : { height: 1600 } }] : [];
+    const r = await manipulateAsync(p.uri, actions, { compress: 0.72, format: SaveFormat.JPEG });
+    return { ...p, uri: r.uri, type: 'image/jpeg' };
   } catch {
-    return { uri: a.uri, name: a.fileName || `photo-${Date.now()}-${i}.jpg`, type: a.mimeType || 'image/jpeg' };
+    return p;
   }
 }
 
 /** Ajoute un fichier à un envoi (téléphone ou version web). */
-export async function appendFile(form: FormData, field: string, p: Photo) {
+export async function appendFile(form: FormData, field: string, photo: Photo) {
+  const p = await shrink(photo);
   if (Platform.OS === 'web') {
     const blob = await (await fetch(p.uri)).blob();
     form.append(field, blob, p.name);
@@ -35,20 +42,25 @@ export async function appendFile(form: FormData, field: string, p: Photo) {
 
 export default function PhotoPicker({ photos, onChange, max = 12, label = 'Photos', help }: { photos: Photo[]; onChange: (p: Photo[]) => void; max?: number; label?: string; help?: string }) {
   const [busy, setBusy] = useState(false);
+  // Toujours la liste à jour (évite de perdre une photo quand on en ajoute une autre).
+  const latest = useRef(photos);
+  latest.current = photos;
 
   const add = async (camera: boolean) => {
     const left = max - photos.length;
     if (left <= 0) { info('Photos', `Maximum ${max} photos.`); return; }
     const perm = camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted && Platform.OS !== 'web') { info('Autorisation nécessaire', camera ? 'Autorisez l\'appareil photo dans les réglages du téléphone.' : 'Autorisez l\'accès aux photos dans les réglages du téléphone.'); return; }
-    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.9, allowsMultipleSelection: !camera, selectionLimit: left, orderedSelection: true, exif: false };
-    const res = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
-    if (res.canceled || !res.assets?.length) return;
+    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1, allowsMultipleSelection: !camera && left > 1, selectionLimit: left, orderedSelection: true, exif: false };
     setBusy(true);
     try {
-      const out: Photo[] = [];
-      for (let i = 0; i < Math.min(res.assets.length, left); i++) out.push(await shrink(res.assets[i], photos.length + i));
-      onChange([...photos, ...out]);
+      const res = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
+      if (res.canceled || !res.assets?.length) return;
+      const out = res.assets.slice(0, left).map(fromAsset);
+      if (res.assets.length > left) info('Photos', `Seules les ${left} premières photos ont été ajoutées (maximum ${max}).`);
+      onChange([...latest.current, ...out]);
+    } catch (e: any) {
+      info('Photos', 'Impossible d\'ouvrir les photos : ' + (e?.message || 'erreur inconnue'));
     } finally { setBusy(false); }
   };
 
@@ -67,14 +79,14 @@ export default function PhotoPicker({ photos, onChange, max = 12, label = 'Photo
       {help ? <Text style={st.help}>{help}</Text> : null}
       <View style={st.grid}>
         {photos.map((p, i) => (
-          <View key={p.uri} style={st.cell}>
-            <Image source={{ uri: p.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <View key={p.key || p.uri + i} style={st.cell}>
+            <Image source={{ uri: p.uri }} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={p.key || p.uri} />
             {i === 0 ? <View style={st.main}><Text style={st.mainText}>Principale</Text></View> : (
-              <Pressable onPress={() => onChange([p, ...photos.filter((x) => x !== p)])} style={[st.mini, { left: 4 }]} accessibilityLabel={'Mettre la photo ' + (i + 1) + ' en principale'}>
+              <Pressable onPress={() => onChange([p, ...photos.filter((_, j) => j !== i)])} style={[st.mini, { left: 4 }]} accessibilityLabel={'Mettre la photo ' + (i + 1) + ' en principale'}>
                 <Icon name="star" size={14} color={C.goldFg} />
               </Pressable>
             )}
-            <Pressable onPress={() => onChange(photos.filter((x) => x !== p))} style={[st.mini, { right: 4 }]} accessibilityLabel={'Retirer la photo ' + (i + 1)}>
+            <Pressable onPress={() => onChange(photos.filter((_, j) => j !== i))} style={[st.mini, { right: 4 }]} accessibilityLabel={'Retirer la photo ' + (i + 1)}>
               <Icon name="close" size={14} color={C.crit} stroke={2.6} />
             </Pressable>
           </View>

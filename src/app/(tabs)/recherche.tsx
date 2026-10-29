@@ -13,9 +13,9 @@ type Filters = {
   type: 'vehicule' | 'immobilier';
   rubrique: string; operation: string; marque: string; modele: string; lieu: string;
   carrosserie: string; carburant: string; transmission: string; type_de_bien: string;
-  prix_min: string; prix_max: string; annee_min: string; km_max: string; tri: string;
+  prix_min: string; prix_max: string; annee_min: string; km_max: string; tri: string; vendeur: string; vendeur_nom: string;
 };
-const EMPTY: Filters = { type: 'vehicule', rubrique: '', operation: '', marque: '', modele: '', lieu: '', carrosserie: '', carburant: '', transmission: '', type_de_bien: '', prix_min: '', prix_max: '', annee_min: '', km_max: '', tri: '' };
+const EMPTY: Filters = { type: 'vehicule', rubrique: '', operation: '', marque: '', modele: '', lieu: '', carrosserie: '', carburant: '', transmission: '', type_de_bien: '', prix_min: '', prix_max: '', annee_min: '', km_max: '', tri: '', vendeur: '', vendeur_nom: '' };
 
 const TRIS: Opt[] = [
   { id: '', nom: 'Plus récentes' }, { id: 'prix_asc', nom: 'Prix croissant' }, { id: 'prix_desc', nom: 'Prix décroissant' }, { id: 'annee_desc', nom: 'Année (plus récentes)' },
@@ -43,7 +43,7 @@ export default function Search() {
   // Arrivée depuis l'accueil (catégorie, marque…) : on repart de ces critères.
   useEffect(() => {
     if (!params.t) return;
-    setF({ ...EMPTY, type: params.type === 'immobilier' ? 'immobilier' : 'vehicule', rubrique: params.rubrique || '', marque: params.marque || '', operation: params.operation || '' });
+    setF({ ...EMPTY, type: params.type === 'immobilier' ? 'immobilier' : 'vehicule', rubrique: params.rubrique || '', marque: params.marque || '', operation: params.operation || '', vendeur: params.vendeur || '', vendeur_nom: params.vendeur_nom || '' });
     setQ(''); setQDeb('');
     if (params.focus) setTimeout(() => input.current?.focus(), 350);
   }, [params.t]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,7 +56,7 @@ export default function Search() {
       type: f.type, q: qDeb, tri: f.tri, lieu: f.lieu, prix_min: f.prix_min.replace(/\D/g, ''), prix_max: f.prix_max.replace(/\D/g, ''),
       rubrique: veh ? f.rubrique : '', marque: veh ? f.modele || f.marque : '', carrosserie: veh ? f.carrosserie : '', carburant: veh ? f.carburant : '',
       transmission: veh ? f.transmission : '', annee_min: veh ? f.annee_min : '', km_max: veh ? f.km_max.replace(/\D/g, '') : '',
-      operation: veh ? '' : f.operation, type_de_bien: veh ? '' : f.type_de_bien, per_page: 20,
+      operation: veh ? '' : f.operation, type_de_bien: veh ? '' : f.type_de_bien, vendeur: f.vendeur, per_page: 20,
     };
   }, [f, qDeb]);
 
@@ -83,6 +83,7 @@ export default function Search() {
   const name = (list: { id: number; nom: string }[] | undefined, id: string) => list?.find((x) => String(x.id) === id)?.nom || '';
 
   const active: { k: keyof Filters; label: string }[] = [];
+  if (f.vendeur) active.push({ k: 'vendeur', label: 'Annonces de ' + (f.vendeur_nom || 'ce vendeur') });
   if (f.type === 'vehicule' && f.marque) active.push({ k: 'marque', label: (brand?.nom || 'Marque') + (f.modele ? ' ' + name(brand?.modeles, f.modele) : '') });
   if (f.lieu) active.push({ k: 'lieu', label: lieux.find((l) => String(l.id) === f.lieu)?.nom || 'Lieu' });
   if (f.prix_min) active.push({ k: 'prix_min', label: 'Dès ' + money(Number(f.prix_min.replace(/\D/g, ''))) + ' F' });

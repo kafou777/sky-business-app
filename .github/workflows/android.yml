@@ -12,6 +12,9 @@ on:
 permissions:
   contents: write
 
+env:
+  SKY_BUILD: ${{ github.run_number }}
+
 concurrency:
   group: android
   cancel-in-progress: true
@@ -47,8 +50,6 @@ jobs:
           if [ -n "$KEYSTORE_B64" ]; then printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"; echo "SKY_KEYSTORE=$RUNNER_TEMP/upload.keystore" >> "$GITHUB_ENV"; echo "Clé d'envoi : oui"; else echo "Clé d'envoi : non (signature de test)"; fi
 
       - name: Projet Android
-        env:
-          SKY_BUILD: ${{ github.run_number }}
         run: npx expo prebuild --platform android --no-install
 
       - name: Outils Android (NDK)
