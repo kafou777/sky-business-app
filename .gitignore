@@ -39,3 +39,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Dossiers natifs générés automatiquement (npx expo prebuild)
+/android
+/ios
+
+# Fichiers secrets (jamais dans le dépôt)
+google-services.json
+GoogleService-Info.plist
+*.keystore

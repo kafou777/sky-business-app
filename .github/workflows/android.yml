@@ -1,0 +1,82 @@
+# Fabrication de l'application Android Sky Business.
+# - APK : fichier à installer directement sur un téléphone (tests).
+# - AAB : fichier à envoyer sur Google Play (quand la clé d'envoi est configurée).
+# Le résultat est déposé dans la branche « builds » du dépôt.
+name: Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Dépendances
+        run: npm ci
+
+      - name: Fichiers secrets (Firebase, clé d'envoi)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          KEYSTORE_B64: ${{ secrets.SKY_UPLOAD_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > google-services.json; echo "Firebase : oui"; else echo "Firebase : non (notifications désactivées)"; fi
+          if [ -n "$KEYSTORE_B64" ]; then printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"; echo "SKY_KEYSTORE=$RUNNER_TEMP/upload.keystore" >> "$GITHUB_ENV"; echo "Clé d'envoi : oui"; else echo "Clé d'envoi : non (signature de test)"; fi
+
+      - name: Projet Android
+        env:
+          SKY_BUILD: ${{ github.run_number }}
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Compilation
+        env:
+          SKY_KEYSTORE_PASSWORD: ${{ secrets.SKY_KEYSTORE_PASSWORD }}
+          SKY_KEY_ALIAS: ${{ secrets.SKY_KEY_ALIAS }}
+          SKY_KEY_PASSWORD: ${{ secrets.SKY_KEY_PASSWORD }}
+        run: |
+          cd android
+          ./gradlew assembleRelease bundleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Dépôt dans la branche « builds »
+        run: |
+          V=$(node -p "require('./app.config.js').expo.version")
+          N=${{ github.run_number }}
+          mkdir out
+          cp android/app/build/outputs/apk/release/app-release.apk "out/sky-business-$V-build$N.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "out/sky-business-$V-build$N.aab"
+          ls -la out
+          cd out
+          git init -q
+          git checkout -q -b builds
+          git add .
+          git -c user.name="Sky Business CI" -c user.email="ci@skybusiness.ci" commit -qm "Application $V (build $N)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" builds
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sky-business-android
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 14
