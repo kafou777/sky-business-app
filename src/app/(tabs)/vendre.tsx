@@ -11,7 +11,7 @@ import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
 
 type Form = Record<string, string>;
-const DRAFT = 'sky_brouillon_annonce_v2';
+const DRAFT = 'sky_brouillon_annonce_v3'; // le brouillon garde le texte, pas les photos (fichiers temporaires du téléphone)
 const INIT: Form = { categorie: 'vente', marque: '', modele: '', annee: '', kilometrage: '', carburant: '', transmission: '', carrosserie: '', couleur: '', etat: '', puissance: '', prix: '', telephone: '', lieu: '', quartier: '', description: '', provenance: '', prix_periode: 'jour', immo_titre: '', immo_statut: 'louer', type_de_bien: '', immo_periode: 'mois', type_vendeur: '', entreprise: '', une: '', une_jours: '0' };
 
 export default function Vendre() {
@@ -29,13 +29,13 @@ export default function Vendre() {
 
   useEffect(() => { getCatalogue().then(setCat).catch((e) => setErr(e.message)); }, []);
   useEffect(() => {
-    AsyncStorage.getItem(DRAFT).then((s) => { if (s) { try { const d = JSON.parse(s); setF({ ...INIT, ...d.f }); setPhotos(d.photos || []); } catch {} } });
+    AsyncStorage.getItem(DRAFT).then((s) => { if (s) { try { const d = JSON.parse(s); setF({ ...INIT, ...d.f }); } catch {} } });
   }, []);
   useEffect(() => { if (profile && !f.telephone) setF((o) => ({ ...o, telephone: profile.telephone || '' })); }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const t = setTimeout(() => AsyncStorage.setItem(DRAFT, JSON.stringify({ f, photos })).catch(() => {}), 600);
+    const t = setTimeout(() => AsyncStorage.setItem(DRAFT, JSON.stringify({ f })).catch(() => {}), 600);
     return () => clearTimeout(t);
-  }, [f, photos]);
+  }, [f]);
 
   const set = (k: string) => (v: string) => setF((o) => ({ ...o, [k]: v, ...(k === 'marque' ? { modele: '' } : {}) }));
   const brand = cat?.marques.find((b) => String(b.id) === f.marque);

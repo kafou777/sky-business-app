@@ -11,7 +11,7 @@ module.exports = {
     name: 'Sky Business',
     slug: 'sky-business',
     scheme: 'skybusiness',
-    version: '1.0.1',
+    version: '1.0.2',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -49,7 +49,7 @@ module.exports = {
       'expo-image',
       'expo-secure-store',
       'expo-font',
-      ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 280, resizeMode: 'contain', backgroundColor: '#ffffff' }],
+      ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 288, resizeMode: 'contain', backgroundColor: '#ffffff' }],
       'expo-web-browser',
       ['expo-image-picker', {
         photosPermission: 'Sky Business a besoin d\'accéder à vos photos pour ajouter des images à vos annonces et à vos demandes de pièces.',
