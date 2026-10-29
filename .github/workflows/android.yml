@@ -51,6 +51,13 @@ jobs:
           SKY_BUILD: ${{ github.run_number }}
         run: npx expo prebuild --platform android --no-install
 
+      - name: Outils Android (NDK)
+        run: |
+          NDK=$(grep -o 'ndkVersion = "[^"]*"' node_modules/react-native/gradle/libs.versions.toml | cut -d'"' -f2)
+          echo "NDK $NDK"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK" > /dev/null
+
       - name: Compilation
         env:
           SKY_KEYSTORE_PASSWORD: ${{ secrets.SKY_KEYSTORE_PASSWORD }}
