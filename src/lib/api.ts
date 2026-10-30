@@ -13,7 +13,7 @@ export type Contact = {
 export type Listing = {
   id: number; type: 'vehicule' | 'immobilier'; titre: string; url: string; date: string;
   prix: number; prix_affiche: string; vip: boolean; vendu: boolean; lieu: string;
-  photos: string[]; vignettes?: string[]; nb_photos: number;
+  photos: string[]; vignettes?: string[]; grandes?: string[]; nb_photos: number;
   rubrique?: string; marque?: string; modele?: string; annee?: number | null; kilometrage?: number | null;
   carburant?: string; transmission?: string; carrosserie?: string; couleur?: string; etat?: string;
   puissance?: string; cylindres?: string; portes?: string; interieur?: string;
@@ -163,6 +163,9 @@ export async function getCatalogue(force = false): Promise<Catalogue> {
     throw e;
   }
 }
+
+/** Photo de la carte déjà affichée dans une liste : montrée tout de suite en ouvrant l'annonce. */
+export const cardPhotos = new Map<number, string>();
 
 /* ---------- Formats ---------- */
 

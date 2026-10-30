@@ -16,14 +16,22 @@ function fromAsset(a: ImagePicker.ImagePickerAsset): Photo {
   return { uri: a.uri, name: `photo-${Date.now()}-${seq}.jpg`, type: a.mimeType || 'image/jpeg', width: a.width, height: a.height, key: `${Date.now()}-${seq}` };
 }
 
-/** Réduit la photo (1600 px max, JPEG) juste avant l'envoi : plus rapide sur les réseaux mobiles. */
+/**
+ * Allège la photo juste avant l'envoi, sans perte visible :
+ * 1280 px au plus grand côté (le site affiche 1024 px), WebP qualité 82 sur Android (JPEG 85 sur iPhone).
+ * Une photo de téléphone de 3 à 6 Mo passe à environ 150-250 Ko : envoi bien plus rapide.
+ * Les informations cachées (position GPS…) sont retirées au passage.
+ */
 async function shrink(p: Photo): Promise<Photo> {
   if (Platform.OS === 'web') return p;
   try {
-    const big = Math.max(p.width || 0, p.height || 0);
-    const actions = big > 1600 ? [{ resize: (p.width || 0) >= (p.height || 0) ? { width: 1600 } : { height: 1600 } }] : [];
-    const r = await manipulateAsync(p.uri, actions, { compress: 0.72, format: SaveFormat.JPEG });
-    return { ...p, uri: r.uri, type: 'image/jpeg' };
+    const MAX = 1280;
+    const w = p.width || 0, h = p.height || 0;
+    const actions = Math.max(w, h) > MAX ? [{ resize: w >= h ? { width: MAX } : { height: MAX } }] : [];
+    const webp = Platform.OS === 'android';
+    const r = await manipulateAsync(p.uri, actions, { compress: webp ? 0.82 : 0.85, format: webp ? SaveFormat.WEBP : SaveFormat.JPEG });
+    const name = p.name.replace(/\.[a-z0-9]+$/i, '') + (webp ? '.webp' : '.jpg');
+    return { ...p, uri: r.uri, name, type: webp ? 'image/webp' : 'image/jpeg' };
   } catch {
     return p;
   }

@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Icon from './Icon';
 import Photo from './Photo';
-import { Listing, money } from '@/lib/api';
+import { cardPhotos, Listing, money } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
@@ -31,13 +31,18 @@ function Fav({ id }: { id: number }) {
   );
 }
 
+function open(l: Listing) {
+  if (l.photos[0]) cardPhotos.set(l.id, l.photos[0]);
+  router.push(`/annonce/${l.id}`);
+}
+
 /** Carte verticale (carrousels de l'accueil). */
-export function ListingCard({ l, width = 250 }: { l: Listing; width?: number }) {
+export function ListingCard({ l, width = 250, low }: { l: Listing; width?: number; low?: boolean }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={l.titre + ', ' + (l.prix ? money(l.prix) + ' francs CFA' : 'prix sur demande')}
-      onPress={() => router.push(`/annonce/${l.id}`)} style={({ pressed }) => [st.card, { width }, pressed && { opacity: 0.9 }]}>
+      onPress={() => open(l)} style={({ pressed }) => [st.card, { width }, pressed && { opacity: 0.9 }]}>
       <View style={[st.photo, { height: width * 0.66 }]}>
-        <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} />
+        <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} priority={low ? 'low' : 'normal'} />
         <Badges l={l} />
         <Fav id={l.id} />
       </View>
@@ -54,7 +59,7 @@ export function ListingCard({ l, width = 250 }: { l: Listing; width?: number }) 
 /** Carte pleine largeur (résultats de recherche, favoris). */
 export function ListingRow({ l, extra }: { l: Listing; extra?: React.ReactNode }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={l.titre} onPress={() => router.push(`/annonce/${l.id}`)}
+    <Pressable accessibilityRole="button" accessibilityLabel={l.titre} onPress={() => open(l)}
       style={({ pressed }) => [st.rowCard, pressed && { opacity: 0.92 }]}>
       <View style={st.rowPhoto}>
         <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} />

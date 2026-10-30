@@ -9,7 +9,7 @@ import Icon, { IconName } from '@/components/Icon';
 import { ListingCard, PriceText } from '@/components/ListingCard';
 import MapEmbed from '@/components/MapEmbed';
 import { Badge, Button, Empty, IconButton, info, Loading } from '@/components/ui';
-import { ago, api, Listing, money, prettyPhone } from '@/lib/api';
+import { ago, api, Listing, money, prettyPhone, cardPhotos } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
@@ -93,7 +93,7 @@ export default function Detail() {
               onScroll={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))} scrollEventThrottle={64}
               renderItem={({ item, index }) => (
                 <Pressable onPress={() => setZoom(index)} accessibilityLabel={'Photo ' + (index + 1) + ' sur ' + l.photos.length + ', agrandir'}>
-                  <Photo uri={item} thumb={l.vignettes?.[index]} style={{ width: W, height: W * 0.75 }} icon={veh ? 'car' : 'building'} priority={index === 0 ? 'high' : 'normal'} />
+                  <Photo uri={item} thumb={(index === 0 && cardPhotos.get(l.id)) || l.vignettes?.[index]} style={{ width: W, height: W * 0.75 }} icon={veh ? 'car' : 'building'} priority={index === 0 ? 'high' : 'normal'} />
                 </Pressable>
               )} />
           ) : <View style={st.noPhoto}><Icon name={veh ? 'car' : 'building'} size={60} color={C.faint} /></View>}
@@ -219,7 +219,7 @@ export default function Detail() {
           <View style={{ marginTop: 6 }}>
             <Text style={[st.h, { paddingHorizontal: 16, marginTop: 8, marginBottom: 12 }]}>{veh && l.marque ? 'Autres ' + l.marque : 'Annonces similaires'}</Text>
             <FlatList horizontal data={sim} keyExtractor={(x) => 's' + x.id} showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-              renderItem={({ item }) => <ListingCard l={item} width={230} />} />
+              renderItem={({ item }) => <ListingCard l={item} width={230} low />} />
           </View>
         ) : null}
       </ScrollView>
@@ -238,9 +238,9 @@ export default function Detail() {
 
       <Modal visible={zoom !== null} onRequestClose={() => setZoom(null)} animationType="fade">
         <View style={{ flex: 1, backgroundColor: '#000' }}>
-          <FlatList horizontal pagingEnabled data={l.photos} initialScrollIndex={zoom ?? 0} getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
+          <FlatList horizontal pagingEnabled data={l.grandes?.length === l.photos.length ? l.grandes : l.photos} initialScrollIndex={zoom ?? 0} getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
             initialNumToRender={1} maxToRenderPerBatch={2} windowSize={3}
-            keyExtractor={(u, i) => 'z' + i} renderItem={({ item, index }) => <Photo uri={item} thumb={l.vignettes?.[index]} style={{ width, height: '100%', backgroundColor: '#000' }} fit="contain" />} />
+            keyExtractor={(u, i) => 'z' + i} renderItem={({ item, index }) => <Photo uri={item} thumb={l.photos[index]} style={{ width, height: '100%', backgroundColor: '#000' }} fit="contain" />} />
           <View style={[st.topBar, { top: ins.top + 6, justifyContent: 'flex-end' }]}>
             <IconButton name="close" label="Fermer" onPress={() => setZoom(null)} />
           </View>
