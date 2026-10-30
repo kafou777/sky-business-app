@@ -136,7 +136,7 @@ export default function Detail() {
                   {l.vendeur?.sky || c.pro ? <VerifiedBadge /> : null}
                 </View>
                 {l.vendeur?.annonces ? <Text style={st.sellerSub}>{money(l.vendeur.annonces)} annonce{l.vendeur.annonces > 1 ? 's' : ''} en ligne</Text> : null}
-                <Text style={st.sellerSub}>{l.vendeur?.sky ? 'Annonce publiée par Sky Business' : (c.pro ? 'Professionnel' : 'Particulier') + (l.vendeur?.depuis ? ' · sur Sky Business depuis ' + l.vendeur.depuis : '')}</Text>
+                <Text style={st.sellerSub}>{l.vendeur?.sky ? 'Annonce publiée par Sky Business' : l.vendeur?.texte ? 'Numéro indiqué par le vendeur dans l\'annonce' : (c.pro ? 'Professionnel' : 'Particulier') + (l.vendeur?.depuis ? ' · sur Sky Business depuis ' + l.vendeur.depuis : '')}</Text>
               </View>
               {l.vendeur?.sky ? (
                 <View style={st.sellerLogo}><Image source={require('../../../assets/icon.png')} style={{ width: 44, height: 44 }} contentFit="contain" /></View>

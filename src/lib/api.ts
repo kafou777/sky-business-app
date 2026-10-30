@@ -22,7 +22,7 @@ export type Listing = {
   statut?: string; statut_label?: string;
   desc_ia?: string; intel?: { points?: [string, string, string][]; resume?: string } | [];
   marque_id?: number; carte?: { lieu: string; embed: string; lien: string };
-  vendeur?: { id: number; sky: boolean; annonces: number; depuis: string };
+  vendeur?: { id: number; sky: boolean; texte?: boolean; annonces: number; depuis: string };
 };
 
 export type Term = { id: number; nom: string; slug: string; parent: number };
