@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import Icon from './Icon';
+import Photo from './Photo';
 import { Listing, money } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
@@ -37,7 +37,7 @@ export function ListingCard({ l, width = 250 }: { l: Listing; width?: number }) 
     <Pressable accessibilityRole="button" accessibilityLabel={l.titre + ', ' + (l.prix ? money(l.prix) + ' francs CFA' : 'prix sur demande')}
       onPress={() => router.push(`/annonce/${l.id}`)} style={({ pressed }) => [st.card, { width }, pressed && { opacity: 0.9 }]}>
       <View style={[st.photo, { height: width * 0.66 }]}>
-        {l.photos[0] ? <Image source={{ uri: l.photos[0] }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} recyclingKey={String(l.id)} /> : <Icon name={l.type === 'immobilier' ? 'building' : 'car'} size={42} color={C.faint} />}
+        <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} />
         <Badges l={l} />
         <Fav id={l.id} />
       </View>
@@ -57,7 +57,7 @@ export function ListingRow({ l, extra }: { l: Listing; extra?: React.ReactNode }
     <Pressable accessibilityRole="button" accessibilityLabel={l.titre} onPress={() => router.push(`/annonce/${l.id}`)}
       style={({ pressed }) => [st.rowCard, pressed && { opacity: 0.92 }]}>
       <View style={st.rowPhoto}>
-        {l.photos[0] ? <Image source={{ uri: l.photos[0] }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} recyclingKey={String(l.id)} /> : <Icon name={l.type === 'immobilier' ? 'building' : 'car'} size={46} color={C.faint} />}
+        <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} />
         <Badges l={l} />
         <Fav id={l.id} />
         {l.nb_photos > 1 ? <View style={st.count}><Icon name="camera" size={13} color={C.white} /><Text style={st.countText}>{l.nb_photos}</Text></View> : null}

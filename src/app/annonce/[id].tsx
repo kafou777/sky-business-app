@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FlatList, Linking, Modal, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
+import Photo from '@/components/Photo';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -87,11 +88,12 @@ export default function Detail() {
         <View style={{ width: '100%', height: W * 0.75, backgroundColor: C.surface }}>
           {l.photos.length ? (
             <FlatList horizontal pagingEnabled data={l.photos} keyExtractor={(u, i) => i + u} showsHorizontalScrollIndicator={false}
+              initialNumToRender={1} maxToRenderPerBatch={2} windowSize={3} getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
               onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
               onScroll={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))} scrollEventThrottle={64}
               renderItem={({ item, index }) => (
                 <Pressable onPress={() => setZoom(index)} accessibilityLabel={'Photo ' + (index + 1) + ' sur ' + l.photos.length + ', agrandir'}>
-                  <Image source={{ uri: item }} style={{ width: W, height: W * 0.75 }} contentFit="cover" transition={120} />
+                  <Photo uri={item} thumb={l.vignettes?.[index]} style={{ width: W, height: W * 0.75 }} icon={veh ? 'car' : 'building'} priority={index === 0 ? 'high' : 'normal'} />
                 </Pressable>
               )} />
           ) : <View style={st.noPhoto}><Icon name={veh ? 'car' : 'building'} size={60} color={C.faint} /></View>}
@@ -237,7 +239,8 @@ export default function Detail() {
       <Modal visible={zoom !== null} onRequestClose={() => setZoom(null)} animationType="fade">
         <View style={{ flex: 1, backgroundColor: '#000' }}>
           <FlatList horizontal pagingEnabled data={l.photos} initialScrollIndex={zoom ?? 0} getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
-            keyExtractor={(u, i) => 'z' + i} renderItem={({ item }) => <Image source={{ uri: item }} style={{ width, height: '100%' }} contentFit="contain" />} />
+            initialNumToRender={1} maxToRenderPerBatch={2} windowSize={3}
+            keyExtractor={(u, i) => 'z' + i} renderItem={({ item, index }) => <Photo uri={item} thumb={l.vignettes?.[index]} style={{ width, height: '100%', backgroundColor: '#000' }} fit="contain" />} />
           <View style={[st.topBar, { top: ins.top + 6, justifyContent: 'flex-end' }]}>
             <IconButton name="close" label="Fermer" onPress={() => setZoom(null)} />
           </View>
