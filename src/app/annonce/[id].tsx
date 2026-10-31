@@ -4,25 +4,16 @@ import { Image } from 'expo-image';
 import Photo from '@/components/Photo';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 import Icon, { IconName } from '@/components/Icon';
 import { ListingCard, PriceText } from '@/components/ListingCard';
 import MapEmbed from '@/components/MapEmbed';
+import { Avatar, Stars, VerifiedBadge } from '@/components/Seller';
 import { Badge, Button, Empty, IconButton, info, Loading } from '@/components/ui';
 import { ago, api, Listing, money, prettyPhone, cardPhotos } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
 const INTEL_ICON: Record<string, IconName> = { tag: 'tag', star: 'star', gauge: 'gauge', cal: 'calendar', leaf: 'fuel', gear: 'gear', ship: 'ship', image: 'image', shield: 'shield' };
-
-function VerifiedBadge() {
-  return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" accessibilityLabel="Vérifié">
-      <Path fill="#1a73e8" d="M12 1.5l2.6 1.9 3.2-.2 1 3.1 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3.1-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3.1-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3.1 3.2.2z" />
-      <Path d="m8 12.2 2.7 2.7L16.3 9" fill="none" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
 
 export default function Detail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -130,20 +121,26 @@ export default function Detail() {
           </View>
 
           {c ? (
-            <Pressable onPress={() => (l.vendeur && l.vendeur.id ? router.push({ pathname: '/recherche', params: { type: l.type, vendeur: String(l.vendeur.id), vendeur_nom: c.nom, t: String(Date.now()) } }) : undefined)}
-              style={st.seller} accessibilityRole={l.vendeur?.id ? 'button' : undefined} accessibilityLabel={'Vendeur : ' + c.nom}>
+            <Pressable onPress={() => (l.vendeur && l.vendeur.id ? router.push(`/vendeur/${l.vendeur.id}`) : undefined)}
+              style={st.seller} accessibilityRole={l.vendeur?.id ? 'button' : undefined} accessibilityLabel={'Vendeur : ' + c.nom + (l.vendeur?.id ? ', voir son profil' : '')}>
               <View style={{ flex: 1, gap: 4 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={st.sellerName} numberOfLines={1}>{l.vendeur?.sky ? 'Sky Business' : c.nom}</Text>
-                  {l.vendeur?.sky || c.pro ? <VerifiedBadge /> : null}
+                  {l.vendeur?.verifie ? <VerifiedBadge name={l.vendeur?.sky ? 'Sky Business' : c.nom} sky={l.vendeur?.sky} /> : null}
                 </View>
+                {l.vendeur?.verifie && !l.vendeur?.sky ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {l.vendeur.nb_avis ? <><Stars value={l.vendeur.note || 0} size={15} /><Text style={st.sellerRate}>{String(l.vendeur.note).replace('.', ',')} · {l.vendeur.nb_avis} avis</Text></> : <Text style={st.sellerRate}>Entreprise vérifiée · donnez votre avis</Text>}
+                  </View>
+                ) : null}
                 {l.vendeur?.annonces ? <Text style={st.sellerSub}>{money(l.vendeur.annonces)} annonce{l.vendeur.annonces > 1 ? 's' : ''} en ligne</Text> : null}
                 <Text style={st.sellerSub}>{l.vendeur?.sky ? 'Annonce publiée par Sky Business' : l.vendeur?.texte ? 'Numéro indiqué par le vendeur dans l\'annonce' : (c.pro ? 'Professionnel' : 'Particulier') + (l.vendeur?.depuis ? ' · sur Sky Business depuis ' + l.vendeur.depuis : '')}</Text>
+                {l.vendeur?.id ? <Text style={st.sellerMore}>Voir le profil{l.vendeur.verifie ? ', les avis' : ''} et ses annonces ›</Text> : null}
               </View>
               {l.vendeur?.sky ? (
                 <View style={st.sellerLogo}><Image source={require('../../../assets/icon.png')} style={{ width: 44, height: 44 }} contentFit="contain" /></View>
               ) : (
-                <View style={st.avatar}><Text style={st.avatarText}>{(c.nom || 'V').slice(0, 1).toUpperCase()}</Text></View>
+                <Avatar uri={l.vendeur?.photo} name={c.nom} />
               )}
             </Pressable>
           ) : null}
@@ -293,6 +290,8 @@ const st = StyleSheet.create({
   avatarText: { color: C.white, fontFamily: F.display, fontSize: 20 },
   sellerName: { fontFamily: F.display, fontSize: 19, color: C.fg, flexShrink: 1 },
   sellerSub: { fontFamily: F.body, fontSize: 14.5, color: C.muted },
+  sellerRate: { fontFamily: F.bold, fontSize: 14, color: C.fg },
+  sellerMore: { fontFamily: F.bold, fontSize: 14, color: C.accent, marginTop: 2 },
   safe: { marginTop: 12, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: C.okSoft, borderRadius: R.md, padding: 12 },
   safeText: { flex: 1, fontFamily: F.medium, fontSize: 13, color: C.ok, lineHeight: 18 },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 12, backgroundColor: C.white, borderTopWidth: 1, borderTopColor: C.line },

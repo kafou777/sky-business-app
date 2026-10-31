@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { appendFile } from '@/components/PhotoPicker';
+import { Avatar } from '@/components/Seller';
 import { router } from 'expo-router';
-import { Button, Card, Empty, Field, Header, Notice, Segmented } from '@/components/ui';
+import { Button, Card, confirm, Empty, Field, Header, info, Notice, Segmented } from '@/components/ui';
 import { api, Profile, setToken } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
@@ -10,7 +13,7 @@ export default function ProfilScreen() {
   const { profile, setProfile } = useSession();
   const [d, setD] = useState({ nom: profile?.nom || '', telephone: profile?.telephone || '', whatsapp: profile?.whatsapp || '', type_vendeur: profile?.type_vendeur || '', entreprise: profile?.entreprise || '' });
   const [pw, setPw] = useState({ mot_de_passe: '', nouveau_mot_de_passe: '' });
-  const [busy, setBusy] = useState<'' | 'p' | 'm'>('');
+  const [busy, setBusy] = useState<'' | 'p' | 'm' | 'photo'>('');
   const [msg, setMsg] = useState<{ t: string; k: 'ok' | 'err' } | null>(null);
   if (!profile) return <Empty icon="lock" title="Connexion nécessaire" action="Se connecter" onAction={() => router.replace('/connexion')} />;
   const set = (k: keyof typeof d) => (v: string) => setD((o) => ({ ...o, [k]: v }));
@@ -36,11 +39,47 @@ export default function ProfilScreen() {
     finally { setBusy(''); }
   };
 
+  const photo = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted && Platform.OS !== 'web') { info('Autorisation nécessaire', 'Autorisez l\'accès aux photos dans les réglages du téléphone.'); return; }
+    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, allowsEditing: true, aspect: [1, 1] });
+    if (r.canceled || !r.assets?.length) return;
+    const a = r.assets[0];
+    setBusy('photo'); setMsg(null);
+    try {
+      const form = new FormData();
+      await appendFile(form, 'photo', { uri: a.uri, name: 'profil.jpg', type: a.mimeType || 'image/jpeg', width: a.width, height: a.height });
+      const res = await api<{ profil: Profile }>('/app/profil/photo', { form, timeout: 120000 });
+      setProfile(res.data.profil); setMsg({ t: 'Photo de profil enregistrée.', k: 'ok' });
+    } catch (e: any) { setMsg({ t: e.message, k: 'err' }); }
+    finally { setBusy(''); }
+  };
+  const removePhoto = async () => {
+    if (!(await confirm('Retirer la photo ?', 'Votre initiale s\'affichera à la place.', 'Retirer', true))) return;
+    setBusy('photo');
+    try { const res = await api<{ profil: Profile }>('/app/profil/photo', { body: { retirer: 1 } }); setProfile(res.data.profil); }
+    catch (e: any) { setMsg({ t: e.message, k: 'err' }); }
+    finally { setBusy(''); }
+  };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior="padding">
       <Header title="Mon profil" />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40, maxWidth: 640, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
         {msg ? <Notice text={msg.t} kind={msg.k} /> : null}
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+            <Avatar uri={profile.photo} name={profile.nom} size={84} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <Text style={st.h2}>Photo de profil</Text>
+              <Text style={st.muted}>Visible sur vos annonces et dans les messages. Un logo ou une photo nette de vous.</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Button title={profile.photo ? 'Changer la photo' : 'Choisir une photo'} icon="camera" kind="secondary" onPress={photo} loading={busy === 'photo'} style={{ flex: 1 }} small />
+            {profile.photo ? <Button title="Retirer" kind="ghost" onPress={removePhoto} small /> : null}
+          </View>
+        </Card>
         <Card>
           <Text style={st.h2}>Informations</Text>
           <Field label="Nom et prénoms" value={d.nom} onChangeText={set('nom')} autoCapitalize="words" />

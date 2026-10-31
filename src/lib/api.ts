@@ -22,7 +22,7 @@ export type Listing = {
   statut?: string; statut_label?: string;
   desc_ia?: string; intel?: { points?: [string, string, string][]; resume?: string } | [];
   marque_id?: number; carte?: { lieu: string; embed: string; lien: string };
-  vendeur?: { id: number; sky: boolean; texte?: boolean; annonces: number; depuis: string };
+  vendeur?: { id: number; sky: boolean; texte?: boolean; annonces: number; depuis: string; verifie?: boolean; photo?: string; note?: number | null; nb_avis?: number };
 };
 
 export type Term = { id: number; nom: string; slug: string; parent: number };
@@ -43,6 +43,15 @@ export type Config = {
 export type Profile = {
   id: number; nom: string; email: string; telephone: string; whatsapp: string; type_vendeur: string; entreprise: string;
   administrateur: boolean; peut_publier_immobilier: boolean; peut_publier_location: boolean; non_lus: number; favoris: number[];
+  photo?: string; verification?: VerifState | null;
+};
+export type VerifState = { statut: 'verifie' | 'attente' | 'refusee' | 'expire' | 'possible' | 'particulier'; jusqu: string; jusqu_affiche: string; motif: string; pro: boolean };
+export type AvisStats = { nb: number; moyenne: number; repartition: Record<string, number>; atouts: Record<string, number> | [] };
+export type Avis = { id: number; auteur: string; photo: string; note: number; atouts: string[]; texte: string; date: string; date_affiche: string; mien: boolean };
+export type Vendeur = {
+  id: number; nom: string; photo: string; pro: boolean; verifie: boolean; depuis: string; depuis_affiche: string; annonces: number; apropos: string; url: string;
+  avis: AvisStats | null; liste?: { avis: Avis[]; total: number; pages: number }; mon_avis?: Avis | null; peut_noter?: boolean;
+  atouts_possibles: { id: string; nom: string }[];
 };
 export type Conversation = {
   id: number; role: 'buyer' | 'seller'; other: string; repondre: boolean; piece: boolean; whatsapp: string;

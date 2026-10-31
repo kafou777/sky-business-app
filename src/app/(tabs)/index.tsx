@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import AutoCarousel from '@/components/AutoCarousel';
 import { FlatList, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,7 +46,7 @@ export default function Home() {
     setErr('');
     try {
       const [v, ...secs] = await Promise.all([
-        api<Listing[]>('/annonces', { query: { type: 'tous', vip: 1, per_page: 10 } }),
+        api<Listing[]>('/annonces', { query: { type: 'tous', vip: 1, per_page: 6 } }),
         ...SECTIONS.map((s) => api<Listing[]>('/annonces', { query: { ...s.query, per_page: 10 } })),
       ]);
       setVip(v.data);
@@ -118,8 +119,7 @@ export default function Home() {
       {vip.length ? (
         <View style={st.sec}>
           <SecHead title="★ À la une" sub="Les offres mises en avant par Sky Business" />
-          <FlatList horizontal data={vip} keyExtractor={(l) => 'v' + l.id} showsHorizontalScrollIndicator={false} contentContainerStyle={st.rowList}
-            renderItem={({ item }) => <ListingCard l={item} width={280} />} />
+          <AutoCarousel data={vip} />
         </View>
       ) : null}
 
