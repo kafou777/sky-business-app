@@ -52,6 +52,7 @@ export default function VendeurScreen() {
                 {v.verifie ? <VerifiedBadge name={v.nom} size={22} sky={v.sky} /> : null}
               </View>
               <Text style={st.sub}>{v.sky ? 'Professionnel · propriétaire de la plateforme' : (v.pro ? 'Professionnel' : 'Particulier') + ' · depuis ' + v.depuis_affiche}</Text>
+              {v.tel_verifie ? <View style={[st.vchip, { backgroundColor: '#dcf3e6' }]}><Icon name="phone" size={12} color={C.ok} /><Text style={[st.vchipText, { color: C.ok }]}>Téléphone vérifié</Text></View> : null}
               {v.verifie ? <View style={st.vchip}><Icon name="shield" size={13} color="#1a56b8" /><Text style={st.vchipText}>{v.sky ? 'Entreprise certifiée' : 'Entreprise vérifiée par Sky Business'}</Text></View> : null}
             </View>
           </View>

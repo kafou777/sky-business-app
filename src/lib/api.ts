@@ -44,12 +44,13 @@ export type Profile = {
   id: number; nom: string; email: string; telephone: string; whatsapp: string; type_vendeur: string; entreprise: string;
   administrateur: boolean; peut_publier_immobilier: boolean; peut_publier_location: boolean; non_lus: number; favoris: number[];
   photo?: string; verification?: VerifState | null;
+  telephone_verifie?: boolean; otp?: { canaux: string[]; publier: boolean; badge: boolean } | null;
 };
 export type VerifState = { statut: 'verifie' | 'attente' | 'refusee' | 'expire' | 'possible' | 'particulier'; jusqu: string; jusqu_affiche: string; motif: string; pro: boolean };
 export type AvisStats = { nb: number; moyenne: number; repartition: Record<string, number>; atouts: Record<string, number> | [] };
 export type Avis = { id: number; auteur: string; photo: string; note: number; atouts: string[]; texte: string; date: string; date_affiche: string; mien: boolean };
 export type Vendeur = {
-  id: number; nom: string; photo: string; pro: boolean; verifie: boolean; sky?: boolean; depuis: string; depuis_affiche: string; annonces: number; apropos: string; url: string;
+  id: number; nom: string; photo: string; pro: boolean; verifie: boolean; sky?: boolean; depuis: string; depuis_affiche: string; annonces: number; apropos: string; url: string; tel_verifie?: boolean;
   avis: AvisStats | null; liste?: { avis: Avis[]; total: number; pages: number }; mon_avis?: Avis | null; peut_noter?: boolean;
   atouts_possibles: { id: string; nom: string }[];
 };

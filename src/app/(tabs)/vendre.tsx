@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, ScrollViewInstance, StyleSh
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PhoneVerify from '@/components/PhoneVerify';
 import PhotoPicker, { appendFile, Photo } from '@/components/PhotoPicker';
 import { Button, Card, Check, Empty, Field, Loading, Notice, Opt, Segmented, Select } from '@/components/ui';
 import { api, Catalogue, getCatalogue, getConfig, money } from '@/lib/api';
@@ -106,6 +107,7 @@ export default function Vendre() {
         <Text style={st.h1}>{staff ? 'Publier une annonce' : 'Vendre mon véhicule'}</Text>
         <Text style={st.lead}>{staff ? 'Compte administrateur : l\'annonce est mise en ligne directement.' : 'Votre annonce sera vérifiée par Sky Business avant sa mise en ligne.'}</Text>
         {err ? <Notice text={err} kind="err" /> : null}
+        {!staff && profile.otp?.publier && !profile.telephone_verifie ? <PhoneVerify title="Confirmez d'abord votre numéro" intro="Pour publier une annonce, confirmez votre numéro de téléphone avec le code que vous allez recevoir. Cela protège les acheteurs contre les faux comptes." /> : null}
 
         {staff ? (
           <Card>

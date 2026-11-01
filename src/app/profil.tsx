@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import * as ImagePicker from 'expo-image-picker';
 import { appendFile } from '@/components/PhotoPicker';
 import { Avatar } from '@/components/Seller';
+import PhoneVerify from '@/components/PhoneVerify';
 import { router } from 'expo-router';
 import { Button, Card, confirm, Empty, Field, Header, info, Notice, Segmented } from '@/components/ui';
 import { api, Profile, setToken } from '@/lib/api';
@@ -96,6 +97,7 @@ export default function ProfilScreen() {
           ) : null}
           <Button title="Enregistrer" onPress={save} loading={busy === 'p'} />
         </Card>
+        <PhoneVerify />
         <Card>
           <Text style={st.h2}>Mot de passe</Text>
           <Field label="Mot de passe actuel" value={pw.mot_de_passe} onChangeText={(v) => setPw((o) => ({ ...o, mot_de_passe: v }))} secure autoComplete="current-password" />

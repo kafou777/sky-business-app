@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import Icon, { IconName } from '@/components/Icon';
 import { appendFile, Photo } from '@/components/PhotoPicker';
 import { BadgeIcon } from '@/components/Seller';
+import PhoneVerify from '@/components/PhoneVerify';
 import { Button, Field, Header, info, Loading, Notice } from '@/components/ui';
 import { api, Profile, VerifState } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -121,9 +122,16 @@ export default function Verification() {
             </>
           ) : !d.ouvert ? (
             <Text style={st.advP}>Les demandes sont momentanément fermées. Contactez Sky Business pour en savoir plus.</Text>
+          ) : profile.otp?.badge && !profile.telephone_verifie ? (
+            <>
+              <Text style={st.h2}>Demander le badge</Text>
+              <Text style={st.advP}><Text style={{ fontFamily: F.bold, color: C.fg }}>Étape 1 sur 2 :</Text> confirmez votre numéro de téléphone. Ensuite, vous pourrez envoyer les informations de votre entreprise.</Text>
+              <PhoneVerify title="Confirmez votre numéro" />
+            </>
           ) : (
             <>
               <Text style={st.h2}>Demander le badge</Text>
+              {profile.otp?.badge ? <Text style={st.advP}><Text style={{ fontFamily: F.bold, color: C.fg }}>Étape 2 sur 2 :</Text> votre numéro est vérifié. Renseignez maintenant votre entreprise.</Text> : null}
               {e?.statut === 'refusee' ? <Notice kind="err" text={'Votre précédente demande n\'a pas été acceptée.' + (e.motif ? ' Motif : ' + e.motif : '') + ' Vous pouvez en envoyer une nouvelle.'} /> : null}
               {e?.statut === 'expire' ? <Notice kind="warn" text={'Votre badge a expiré le ' + e.jusqu_affiche + '. Envoyez une demande de renouvellement.'} /> : null}
               <Field label="Nom de l'entreprise *" value={f.entreprise} onChangeText={(v) => setF((o) => ({ ...o, entreprise: v }))} maxLength={80} />
