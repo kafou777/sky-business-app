@@ -10,14 +10,14 @@ import { C, F, R } from '@/lib/theme';
 
 /**
  * Bannière « Obtenez le badge vérifié » (accueil) et fenêtre de présentation, comme sur dubizzle.
- * Masquée pour l'équipe Sky Business et les comptes déjà vérifiés ou en cours d'examen.
+ * Masquée seulement pour les professionnels déjà vérifiés ou dont la demande est en cours d'examen.
  */
 export default function VerifBanner() {
   const ins = useSafeAreaInsets();
   const { profile } = useSession();
   const [sheet, setSheet] = useState(false);
   const vs = profile?.verification?.statut;
-  if (profile?.administrateur || vs === 'verifie' || vs === 'attente') return null;
+  if (!profile?.administrateur && (vs === 'verifie' || vs === 'attente')) return null;
   return (
     <>
       <Pressable onPress={() => setSheet(true)} style={({ pressed }) => [st.promo, pressed && { opacity: 0.92 }]} accessibilityRole="button" accessibilityLabel="Obtenez le badge vérifié">
