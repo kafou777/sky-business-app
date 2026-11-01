@@ -49,7 +49,7 @@ export type VerifState = { statut: 'verifie' | 'attente' | 'refusee' | 'expire' 
 export type AvisStats = { nb: number; moyenne: number; repartition: Record<string, number>; atouts: Record<string, number> | [] };
 export type Avis = { id: number; auteur: string; photo: string; note: number; atouts: string[]; texte: string; date: string; date_affiche: string; mien: boolean };
 export type Vendeur = {
-  id: number; nom: string; photo: string; pro: boolean; verifie: boolean; depuis: string; depuis_affiche: string; annonces: number; apropos: string; url: string;
+  id: number; nom: string; photo: string; pro: boolean; verifie: boolean; sky?: boolean; depuis: string; depuis_affiche: string; annonces: number; apropos: string; url: string;
   avis: AvisStats | null; liste?: { avis: Avis[]; total: number; pages: number }; mon_avis?: Avis | null; peut_noter?: boolean;
   atouts_possibles: { id: string; nom: string }[];
 };

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import AutoCarousel from '@/components/AutoCarousel';
+import VerifBanner from '@/components/VerifBanner';
 import { FlatList, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -118,10 +119,12 @@ export default function Home() {
 
       {vip.length ? (
         <View style={st.sec}>
-          <SecHead title="★ À la une" sub="Les offres mises en avant par Sky Business" />
+          <SecHead title="★ À la une" sub="Les offres mises en avant par Sky Business" onAll={() => go({ une: '1' })} />
           <AutoCarousel data={vip} />
         </View>
       ) : null}
+
+      <VerifBanner />
 
       {SECTIONS.slice(0, 2).map((s) => <Row key={s.key} s={s} data={rows[s.key]} onAll={() => go(s.params)} />)}
 

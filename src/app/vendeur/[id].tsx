@@ -49,10 +49,10 @@ export default function VendeurScreen() {
             <View style={{ flex: 1, gap: 3 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={st.name} numberOfLines={2}>{v.nom}</Text>
-                {v.verifie ? <VerifiedBadge name={v.nom} size={22} /> : null}
+                {v.verifie ? <VerifiedBadge name={v.nom} size={22} sky={v.sky} /> : null}
               </View>
-              <Text style={st.sub}>{v.pro ? 'Professionnel' : 'Particulier'} · depuis {v.depuis_affiche}</Text>
-              {v.verifie ? <View style={st.vchip}><Icon name="shield" size={13} color="#1a56b8" /><Text style={st.vchipText}>Entreprise vérifiée par Sky Business</Text></View> : null}
+              <Text style={st.sub}>{v.sky ? 'Professionnel · propriétaire de la plateforme' : (v.pro ? 'Professionnel' : 'Particulier') + ' · depuis ' + v.depuis_affiche}</Text>
+              {v.verifie ? <View style={st.vchip}><Icon name="shield" size={13} color="#1a56b8" /><Text style={st.vchipText}>{v.sky ? 'Entreprise certifiée' : 'Entreprise vérifiée par Sky Business'}</Text></View> : null}
             </View>
           </View>
           {v.apropos ? <Text style={st.about}>{v.apropos}</Text> : null}

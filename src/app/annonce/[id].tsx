@@ -128,14 +128,14 @@ export default function Detail() {
                   <Text style={st.sellerName} numberOfLines={1}>{l.vendeur?.sky ? 'Sky Business' : c.nom}</Text>
                   {l.vendeur?.verifie ? <VerifiedBadge name={l.vendeur?.sky ? 'Sky Business' : c.nom} sky={l.vendeur?.sky} /> : null}
                 </View>
-                {l.vendeur?.verifie && !l.vendeur?.sky ? (
+                {l.vendeur?.verifie ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    {l.vendeur.nb_avis ? <><Stars value={l.vendeur.note || 0} size={15} /><Text style={st.sellerRate}>{String(l.vendeur.note).replace('.', ',')} · {l.vendeur.nb_avis} avis</Text></> : <Text style={st.sellerRate}>Entreprise vérifiée · donnez votre avis</Text>}
+                    {l.vendeur.nb_avis ? <><Stars value={l.vendeur.note || 0} size={15} /><Text style={st.sellerRate}>{String(l.vendeur.note).replace('.', ',')} · {l.vendeur.nb_avis} avis</Text></> : <Text style={st.sellerRate}>{l.vendeur.sky ? 'Donnez votre avis sur Sky Business' : 'Entreprise vérifiée · donnez votre avis'}</Text>}
                   </View>
                 ) : null}
                 {l.vendeur?.annonces ? <Text style={st.sellerSub}>{money(l.vendeur.annonces)} annonce{l.vendeur.annonces > 1 ? 's' : ''} en ligne</Text> : null}
                 <Text style={st.sellerSub}>{l.vendeur?.sky ? 'Annonce publiée par Sky Business' : l.vendeur?.texte ? 'Numéro indiqué par le vendeur dans l\'annonce' : (c.pro ? 'Professionnel' : 'Particulier') + (l.vendeur?.depuis ? ' · sur Sky Business depuis ' + l.vendeur.depuis : '')}</Text>
-                {l.vendeur?.id ? <Text style={st.sellerMore}>Voir le profil{l.vendeur.verifie ? ', les avis' : ''} et ses annonces ›</Text> : null}
+                {l.vendeur?.id ? <Text style={st.sellerMore}>{l.vendeur.sky ? 'Voir le profil Sky Business et les avis ›' : 'Voir le profil' + (l.vendeur.verifie ? ', les avis' : '') + ' et ses annonces ›'}</Text> : null}
               </View>
               {l.vendeur?.sky ? (
                 <View style={st.sellerLogo}><Image source={require('../../../assets/icon.png')} style={{ width: 44, height: 44 }} contentFit="contain" /></View>

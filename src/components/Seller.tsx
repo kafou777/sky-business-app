@@ -39,9 +39,9 @@ export function VerifiedBadge({ name, size = 18, sky }: { name: string; size?: n
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={st.back} onPress={() => setOpen(false)}>
           <Pressable style={st.sheet} onPress={() => {}}>
-            <View style={st.head}><BadgeIcon size={30} /><Text style={st.title}>{sky ? 'Annonce publiée par Sky Business' : name + ' est une entreprise vérifiée'}</Text></View>
+            <View style={st.head}><BadgeIcon size={30} /><Text style={st.title}>{sky ? 'Sky Business est une entreprise certifiée' : name + ' est une entreprise vérifiée'}</Text></View>
             {sky ? (
-              <Text style={st.p}>Ce véhicule est proposé directement par l'équipe Sky Business.</Text>
+              <Text style={st.p}>Sky Business, propriétaire de la plateforme, est certifié d'office. Chaque annonce publiée par l'équipe est vérifiée avant sa mise en ligne, et vous pouvez noter Sky Business et laisser un avis.</Text>
             ) : (
               <>
                 <Text style={st.p}>Le badge « Vérifié » est attribué par Sky Business aux professionnels dont l'existence a été contrôlée : registre du commerce (RCCM), identité du gérant et coordonnées.</Text>
