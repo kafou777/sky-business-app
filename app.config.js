@@ -5,6 +5,10 @@ const hasGoogleServices = fs.existsSync('./google-services.json');
 const hasGoogleServicesPlist = fs.existsSync('./GoogleService-Info.plist');
 // Numéro de fabrication (augmente à chaque version envoyée sur les stores).
 const build = Number(process.env.SKY_BUILD || 1);
+// Projet Expo (expo.dev) : sert à publier l'application pour la tester sur iPhone avec Expo Go.
+const EXPO_PROJECT_ID = process.env.EXPO_PROJECT_ID || '';
+// Uniquement pendant la publication pour Expo Go (workflow « iPhone (Expo Go) ») : ne change rien aux fichiers Android.
+const expoGo = process.env.SKY_EXPO_GO === '1' && EXPO_PROJECT_ID;
 
 module.exports = {
   expo: {
@@ -61,7 +65,9 @@ module.exports = {
       './plugins/withReleaseSigning',
     ],
     experiments: { typedRoutes: false },
+    ...(expoGo ? { runtimeVersion: { policy: 'sdkVersion' }, updates: { url: 'https://u.expo.dev/' + EXPO_PROJECT_ID } } : {}),
     extra: {
+      ...(EXPO_PROJECT_ID ? { eas: { projectId: EXPO_PROJECT_ID } } : {}),
       // Adresse du site : la première qui répond est utilisée ; le site indique ensuite sa propre adresse.
       sites: (process.env.EXPO_PUBLIC_SITES || 'https://skybusiness.ci,https://skybusiness.org').split(','),
     },
