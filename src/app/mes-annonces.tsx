@@ -3,7 +3,8 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { ListingRow } from '@/components/ListingCard';
 import { Badge, Button, confirm, Empty, Header, IconButton, info, Loading } from '@/components/ui';
-import { api, Listing } from '@/lib/api';
+import { api, Listing, money, plural } from '@/lib/api';
+import Icon from '@/components/Icon';
 import { useSession } from '@/lib/session';
 import { C } from '@/lib/theme';
 
@@ -42,6 +43,12 @@ export default function MesAnnonces() {
             <ListingRow l={l} extra={
               <View style={{ gap: 10, marginTop: 8 }}>
                 <Badge label={l.statut_label || ''} kind={l.vendu ? 'crit' : l.statut === 'publish' ? 'ok' : 'warn'} />
+                {l.statut === 'publish' && l.vues != null ? (
+                  <View style={st.stats}>
+                    <View style={st.stat}><Icon name="eye" size={14} color={C.muted} /><Text style={st.statText}>{plural(l.vues, 'vue', 'vues')}</Text></View>
+                    {l.contacts ? <Text style={st.statText}>📞 {money(l.contacts.appels) || '0'} · WhatsApp {money(l.contacts.whatsapp) || '0'} · 💬 {money(l.contacts.messages) || '0'}</Text> : null}
+                  </View>
+                ) : null}
                 {l.statut === 'pending' ? <Text style={st.note}>Sky Business vérifie votre annonce avant sa mise en ligne.</Text> : null}
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {l.statut === 'publish' ? <Button small kind="secondary" title={l.vendu ? 'Remettre en vente' : l.rubrique === 'location' ? 'Marquer loué' : 'Marquer vendu'} onPress={() => sold(l)} style={{ flex: 1 }} /> : null}
@@ -58,4 +65,7 @@ export default function MesAnnonces() {
 
 const st = StyleSheet.create({
   note: { fontSize: 13, color: C.warn },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  statText: { fontSize: 13, color: C.muted },
 });

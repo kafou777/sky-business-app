@@ -20,6 +20,7 @@ export type Listing = {
   provenance?: string; periode?: string; type_de_bien?: string; operation?: 'location' | 'vente';
   description?: string; a_moi?: boolean; cotation?: boolean; quartier?: string; contact?: Contact;
   statut?: string; statut_label?: string;
+  vues?: number; contacts?: { appels: number; whatsapp: number; messages: number };
   desc_ia?: string; intel?: { points?: [string, string, string][]; resume?: string } | [];
   marque_id?: number; carte?: { lieu: string; embed: string; lien: string };
   vendeur?: { id: number; sky: boolean; texte?: boolean; annonces: number; depuis: string; verifie?: boolean; photo?: string; note?: number | null; nb_avis?: number };
@@ -211,3 +212,21 @@ export function hhmm(iso: string) {
   const d = new Date(iso);
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
+
+/* ---------- Statistiques d'une annonce (vues, clics sur Appeler / WhatsApp / Message) ---------- */
+
+export type Stats = { vues: number; min: number; prive: number; tel?: number; wa?: number; chat?: number };
+const statSent = new Map<string, number>();
+
+/** Envoie un événement (une seule fois par annonce et par type dans la session de l'application) et renvoie les chiffres. */
+export async function stat(id: number, t: 'vue' | 'tel' | 'wa' | 'chat'): Promise<Stats | null> {
+  const k = id + t;
+  const last = statSent.get(k) || 0;
+  const send = Date.now() - last > (t === 'vue' ? 6 : 1) * 3600 * 1000;
+  if (send) statSent.set(k, Date.now());
+  try { const { data } = await api<Stats>('/annonces/' + id + '/stat', { body: { t: send ? t : 'get' }, timeout: 10000 }); return data; }
+  catch { return null; }
+}
+
+export function plural(n: number, one: string, many: string) { return (money(n) || '0') + ' ' + (n > 1 ? many : one); }
+

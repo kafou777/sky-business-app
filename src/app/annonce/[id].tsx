@@ -9,7 +9,7 @@ import { ListingCard, PriceText } from '@/components/ListingCard';
 import MapEmbed from '@/components/MapEmbed';
 import { Avatar, Stars, VerifiedBadge } from '@/components/Seller';
 import { Badge, Button, Empty, IconButton, info, Loading } from '@/components/ui';
-import { ago, api, Listing, money, prettyPhone, cardPhotos } from '@/lib/api';
+import { ago, api, Listing, money, plural, prettyPhone, cardPhotos, stat, Stats } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
@@ -27,11 +27,13 @@ export default function Detail() {
   const [starting, setStarting] = useState(false);
   const [sim, setSim] = useState<Listing[]>([]);
   const [more, setMore] = useState(false);
+  const [stats, setStats] = useState<Stats | null>(null);
   const W = Math.min(width, 700);
 
   useEffect(() => {
     api<Listing>('/annonces/' + id).then((r) => {
       setL(r.data);
+      stat(r.data.id, 'vue').then(setStats);
       const q = r.data.type === 'vehicule' && r.data.marque_id ? { type: 'vehicule', marque: r.data.marque_id } : { type: r.data.type, operation: r.data.operation };
       api<Listing[]>('/annonces', { query: { ...q, exclure: r.data.id, per_page: 10 } }).then((x) => setSim(x.data)).catch(() => {});
     }).catch((e) => setErr(e.message));
@@ -65,6 +67,7 @@ export default function Detail() {
   const message = async () => {
     if (!profile) { router.push('/connexion'); return; }
     if (l.a_moi) { router.push({ pathname: '/messages', params: { pour: String(l.id) } }); return; }
+    stat(l.id, 'chat');
     setStarting(true);
     try {
       const r = await api<{ id: number }>('/chat/start', { body: { annonce: l.id } });
@@ -118,7 +121,11 @@ export default function Detail() {
           <View style={st.metaRow}>
             {l.lieu ? <View style={st.meta}><Icon name="pin" size={15} color={C.muted} /><Text style={st.metaText}>{l.lieu}</Text></View> : null}
             <View style={st.meta}><Icon name="clock" size={15} color={C.muted} /><Text style={st.metaText}>Publiée {ago(l.date)}</Text></View>
+            {stats && (stats.prive || stats.vues >= stats.min) ? <View style={st.meta}><Icon name="eye" size={15} color={C.muted} /><Text style={st.metaText}>{plural(stats.vues, 'vue', 'vues')}</Text></View> : null}
           </View>
+          {stats && stats.prive ? (
+            <Text style={st.statsPriv}>📞 {plural(stats.tel || 0, 'appel', 'appels')} · WhatsApp {money(stats.wa || 0) || '0'} · 💬 {plural(stats.chat || 0, 'message', 'messages')} — visible par vous seul</Text>
+          ) : null}
 
           {c ? (
             <Pressable onPress={() => (l.vendeur && l.vendeur.id ? router.push(`/vendeur/${l.vendeur.id}`) : undefined)}
@@ -226,8 +233,8 @@ export default function Detail() {
           <Button title="Messages reçus pour cette annonce" icon="message" onPress={message} style={{ flex: 1 }} />
         ) : (
           <>
-            {c ? <Pressable onPress={() => Linking.openURL(c.appel)} style={st.call} accessibilityRole="button" accessibilityLabel={'Appeler ' + c.nom}><Icon name="phone" size={22} color={C.accent} /></Pressable> : null}
-            {c ? <Button title="WhatsApp" icon="whatsapp" kind="wa" onPress={() => Linking.openURL(c.lien_whatsapp)} style={{ flex: 1 }} /> : null}
+            {c ? <Pressable onPress={() => { stat(l.id, 'tel'); Linking.openURL(c.appel); }} style={st.call} accessibilityRole="button" accessibilityLabel={'Appeler ' + c.nom}><Icon name="phone" size={22} color={C.accent} /></Pressable> : null}
+            {c ? <Button title="WhatsApp" icon="whatsapp" kind="wa" onPress={() => { stat(l.id, 'wa'); Linking.openURL(c.lien_whatsapp); }} style={{ flex: 1 }} /> : null}
             <Button title="Message" icon="message" onPress={message} loading={starting} style={{ flex: 1 }} />
           </>
         )}
@@ -257,6 +264,7 @@ const st = StyleSheet.create({
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 2 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   metaText: { fontFamily: F.body, fontSize: 14, color: C.muted },
+  statsPriv: { fontFamily: F.body, fontSize: 13, color: C.muted, marginTop: 6 },
   cot: { marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.goldSoft, borderRadius: R.lg, padding: 14, borderWidth: 1, borderColor: '#f6dc8f' },
   cotIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: C.white, alignItems: 'center', justifyContent: 'center' },
   cotTitle: { fontFamily: F.bold, fontSize: 16, color: C.fg },
