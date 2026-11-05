@@ -45,6 +45,7 @@ export function ListingCard({ l, width = 250, low }: { l: Listing; width?: numbe
         <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} priority={low ? 'low' : 'normal'} />
         <Badges l={l} />
         <Fav id={l.id} />
+        <Views l={l} />
       </View>
       <View style={st.body}>
         <PriceText l={l} />
@@ -65,6 +66,7 @@ export function ListingRow({ l, extra }: { l: Listing; extra?: React.ReactNode }
         <Photo uri={l.photos[0]} style={StyleSheet.absoluteFill} icon={l.type === 'immobilier' ? 'building' : 'car'} recyclingKey={String(l.id)} />
         <Badges l={l} />
         <Fav id={l.id} />
+        <Views l={l} />
         {l.nb_photos > 1 ? <View style={st.count}><Icon name="camera" size={13} color={C.white} /><Text style={st.countText}>{l.nb_photos}</Text></View> : null}
       </View>
       <View style={[st.body, { paddingBottom: 14 }]}>
@@ -76,6 +78,12 @@ export function ListingRow({ l, extra }: { l: Listing; extra?: React.ReactNode }
       </View>
     </Pressable>
   );
+}
+
+/** Nombre de vues (affiché à partir de 10, comme sur le site). */
+function Views({ l }: { l: Listing }) {
+  if (!l.vues || l.vues < 10) return null;
+  return <View style={st.views}><Icon name="eye" size={13} color={C.white} /><Text style={st.countText}>{money(l.vues)}</Text></View>;
 }
 
 function Badges({ l }: { l: Listing }) {
@@ -104,4 +112,5 @@ const st = StyleSheet.create({
   rowPhoto: { height: 210, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
   count: { position: 'absolute', bottom: 10, right: 10, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(15,18,51,0.7)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   countText: { color: C.white, fontFamily: F.bold, fontSize: 12 },
+  views: { position: 'absolute', bottom: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(15,18,51,0.7)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
 });
