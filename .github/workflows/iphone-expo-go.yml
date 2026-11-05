@@ -50,11 +50,12 @@ jobs:
       - name: Publier pour Expo Go (iPhone)
         if: env.SKIP != '1'
         run: |
-          npx --yes eas-cli@latest update --branch expo-go --platform ios --non-interactive --json \
+          npx --yes eas-cli@latest update --channel expo-go --platform ios --non-interactive --json \
             --message "$(git log -1 --format=%s | cut -c1-200)" > update.json
           cat update.json
           GROUP=$(node -e "const u=require('./update.json');console.log((Array.isArray(u)?u[0]:u).group)")
-          URL="https://qr.expo.dev/eas-update?projectId=$EXPO_PROJECT_ID&groupId=$GROUP"
+          # Lien permanent (toujours la dernière version publiée) : canal « expo-go », Expo Go SDK 58.
+          URL="https://qr.expo.dev/eas-update?projectId=$EXPO_PROJECT_ID&runtimeVersion=exposdk:58.0.0&channel=expo-go"
           LINK=$(curl -fsS "$URL&format=url" || true)
           {
             echo "## Tester sur iPhone avec Expo Go"
