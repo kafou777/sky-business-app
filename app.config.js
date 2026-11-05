@@ -6,7 +6,7 @@ const hasGoogleServicesPlist = fs.existsSync('./GoogleService-Info.plist');
 // Numéro de fabrication (augmente à chaque version envoyée sur les stores).
 const build = Number(process.env.SKY_BUILD || 1);
 // Projet Expo (expo.dev) : sert à publier l'application pour la tester sur iPhone avec Expo Go.
-const EXPO_PROJECT_ID = process.env.EXPO_PROJECT_ID || '';
+const EXPO_PROJECT_ID = process.env.EXPO_PROJECT_ID || 'c78c8158-d898-4a50-a1f4-d2af7ef6e495';
 // Uniquement pendant la publication pour Expo Go (workflow « iPhone (Expo Go) ») : ne change rien aux fichiers Android.
 const expoGo = process.env.SKY_EXPO_GO === '1' && EXPO_PROJECT_ID;
 
@@ -14,6 +14,7 @@ module.exports = {
   expo: {
     name: 'Sky Business',
     slug: 'sky-business',
+    owner: 'skybusiness',
     scheme: 'skybusiness',
     version: '1.0.12',
     orientation: 'portrait',

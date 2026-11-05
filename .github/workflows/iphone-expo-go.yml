@@ -2,7 +2,7 @@
 # (sans compte Apple développeur et sans passer par l'App Store).
 # Secrets / variables du dépôt nécessaires :
 #   - secret EXPO_TOKEN        : jeton d'accès créé sur expo.dev (Account settings → Access tokens)
-#   - variable EXPO_PROJECT_ID : identifiant du projet « sky-business » sur expo.dev
+#   (projet expo.dev « skybusiness/sky-business », ID c78c8158-d898-4a50-a1f4-d2af7ef6e495)
 # Le lien et le QR code à scanner avec l'iPhone s'affichent dans le résumé de l'exécution (onglet Actions).
 name: iPhone (Expo Go)
 
@@ -21,13 +21,13 @@ jobs:
     timeout-minutes: 30
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      EXPO_PROJECT_ID: ${{ vars.EXPO_PROJECT_ID }}
+      EXPO_PROJECT_ID: ${{ vars.EXPO_PROJECT_ID || 'c78c8158-d898-4a50-a1f4-d2af7ef6e495' }}
       SKY_EXPO_GO: '1'
     steps:
       - name: Vérifier la configuration
         run: |
           if [ -z "$EXPO_TOKEN" ] || [ -z "$EXPO_PROJECT_ID" ]; then
-            echo "Ajoutez le secret EXPO_TOKEN et la variable EXPO_PROJECT_ID (Settings → Secrets and variables → Actions)." >> "$GITHUB_STEP_SUMMARY"
+            echo "Ajoutez le secret EXPO_TOKEN (Settings → Secrets and variables → Actions)." >> "$GITHUB_STEP_SUMMARY"
             echo "::warning::EXPO_TOKEN ou EXPO_PROJECT_ID manquant : publication Expo Go ignorée."
             echo "SKIP=1" >> "$GITHUB_ENV"
           fi
