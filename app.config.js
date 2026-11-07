@@ -16,7 +16,7 @@ module.exports = {
     slug: 'sky-business',
     owner: 'skybusiness',
     scheme: 'skybusiness',
-    version: '1.0.12',
+    version: '1.0.13',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',

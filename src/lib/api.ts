@@ -230,3 +230,18 @@ export async function stat(id: number, t: 'vue' | 'tel' | 'wa' | 'chat'): Promis
 
 export function plural(n: number, one: string, many: string) { return (money(n) || '0') + ' ' + (n > 1 ? many : one); }
 
+/* ---------- Boutique d'accessoires ---------- */
+
+export type Accessoire = {
+  id: number; nom: string; url: string; prix: number; barre: number; stock: 'en_stock' | 'sur_commande' | 'epuise';
+  ref: string; note: string; cat: string; compat: string[]; img: string; photo: string;
+  photos?: string[]; resume?: string; description?: string; stock_label?: string; compat_long?: string[];
+};
+export type AccFiltres = {
+  categories: { id: number; nom: string; nb: number }[];
+  vehicules: { id: number; nom: string; modeles: { id: number; nom: string }[] }[];
+  total: number; banniere: string;
+};
+export const STOCKS: Record<string, string> = { en_stock: 'En stock', sur_commande: 'Sur commande', epuise: 'Épuisé' };
+export function accPrice(a: { prix: number }) { return a.prix ? money(a.prix) + ' FCFA' : 'Prix sur demande'; }
+

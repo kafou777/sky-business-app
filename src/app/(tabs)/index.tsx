@@ -8,8 +8,9 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon, { IconName } from '@/components/Icon';
 import { ListingCard } from '@/components/ListingCard';
+import { AccCard } from '@/components/AccCard';
 import { IconButton } from '@/components/ui';
-import { api, Brand, getCatalogue, getConfig, intl, Listing, money } from '@/lib/api';
+import { Accessoire, api, Brand, getCatalogue, getConfig, intl, Listing, money } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F, R } from '@/lib/theme';
 
@@ -28,6 +29,7 @@ const CATS: { label: string; icon: IconName; colors: [string, string]; iconColor
   { label: 'Import', icon: 'ship', colors: ['#d9480f', '#ffa94d'], params: { type: 'vehicule', rubrique: 'import' } },
   { label: 'Immobilier', icon: 'building', colors: ['#6d28d9', '#c084fc'], params: { type: 'immobilier' } },
   { label: 'Pièces', icon: 'wrench', colors: ['#f2b000', '#ffd866'], iconColor: '#1b1400', to: '/pieces' },
+  { label: 'Accessoires', icon: 'bag', colors: ['#b3261e', '#ff7a6b'], to: '/boutique' },
 ];
 
 export default function Home() {
@@ -36,6 +38,7 @@ export default function Home() {
   const [vip, setVip] = useState<Listing[]>([]);
   const [rows, setRows] = useState<Record<string, Listing[]>>({});
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [accs, setAccs] = useState<Accessoire[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [err, setErr] = useState('');
   const [counts, setCounts] = useState<{ veh: number; immo: number }>({ veh: 0, immo: 0 });
@@ -56,6 +59,7 @@ export default function Home() {
       setRows(r);
       Promise.all([api('/annonces', { query: { type: 'vehicule', per_page: 1, inclure_vendus: 1 } }), api('/annonces', { query: { type: 'immobilier', per_page: 1, inclure_vendus: 1 } })])
         .then(([a, b]) => setCounts({ veh: a.total, immo: b.total })).catch(() => {});
+      api<Accessoire[]>('/accessoires', { query: { per_page: 10 } }).then((r) => setAccs(r.data)).catch(() => {});
       getCatalogue().then((c) => setBrands([...c.marques].sort((a, b) => b.annonces - a.annonces).slice(0, 16))).catch(() => {});
     } catch (e: any) {
       setErr(e.message);
@@ -106,9 +110,9 @@ export default function Home() {
           <Pressable key={c.label} accessibilityRole="button" accessibilityLabel={c.label} onPress={() => (c.to ? router.push(c.to as any) : go(c.params!))} style={({ pressed }) => [st.cat, pressed && { transform: [{ scale: 0.96 }] }]}>
             <LinearGradient colors={c.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={st.catIcon}>
               <View style={st.catShine} />
-              <Icon name={c.icon} size={28} color={c.iconColor || C.white} stroke={2.2} />
+              <Icon name={c.icon} size={25} color={c.iconColor || C.white} stroke={2.2} />
             </LinearGradient>
-            <Text style={st.catText}>{c.label}</Text>
+            <Text style={st.catText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{c.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -143,7 +147,17 @@ export default function Home() {
         </View>
       </Pressable>
 
-      {SECTIONS.slice(2).map((s) => <Row key={s.key} s={s} data={rows[s.key]} onAll={() => go(s.params)} />)}
+      {SECTIONS.slice(2, 3).map((s) => <Row key={s.key} s={s} data={rows[s.key]} onAll={() => go(s.params)} />)}
+
+      {accs.length ? (
+        <View style={st.sec}>
+          <SecHead title="Accessoires auto" sub="Boutique Sky Business · commande sur WhatsApp" onAll={() => router.push('/boutique')} />
+          <FlatList horizontal data={accs} keyExtractor={(a) => 'acc' + a.id} showsHorizontalScrollIndicator={false} contentContainerStyle={st.rowList}
+            renderItem={({ item }) => <AccCard a={item} width={170} />} />
+        </View>
+      ) : null}
+
+      {SECTIONS.slice(3).map((s) => <Row key={s.key} s={s} data={rows[s.key]} onAll={() => go(s.params)} />)}
 
       {brands.length ? (
         <View style={st.sec}>
@@ -220,11 +234,11 @@ const st = StyleSheet.create({
   search: { height: 52, borderRadius: R.pill, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 },
   searchText: { flex: 1, fontFamily: F.body, fontSize: 16, color: C.faint },
   searchBtn: { width: 42, height: 42, borderRadius: 12, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
-  cats: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, marginTop: 24 },
+  cats: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8, marginTop: 24 },
   cat: { alignItems: 'center', gap: 6, flex: 1 },
-  catIcon: { width: 62, height: 62, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: '#0f1233', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  catIcon: { width: 54, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: '#0f1233', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   catShine: { position: 'absolute', top: -18, left: -10, width: 52, height: 40, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.22)', transform: [{ rotate: '-20deg' }] },
-  catText: { fontFamily: F.semi, fontSize: 12.5, color: C.fg },
+  catText: { fontFamily: F.semi, fontSize: 11, letterSpacing: -0.2, color: C.fg },
   sec: { marginTop: 26 },
   secHead: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 12 },
   secTitle: { fontFamily: F.display, fontSize: 21, color: C.fg, letterSpacing: -0.2 },
