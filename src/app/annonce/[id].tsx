@@ -233,7 +233,7 @@ export default function Detail() {
           <Button title="Messages reçus pour cette annonce" icon="message" onPress={message} style={{ flex: 1 }} />
         ) : (
           <>
-            {c ? <Pressable onPress={() => { stat(l.id, 'tel'); Linking.openURL(c.appel); }} style={st.call} accessibilityRole="button" accessibilityLabel={'Appeler ' + c.nom}><Icon name="phone" size={22} color={C.accent} /></Pressable> : null}
+            {c && c.appel ? <Pressable onPress={() => { stat(l.id, 'tel'); Linking.openURL(c.appel); }} style={st.call} accessibilityRole="button" accessibilityLabel={'Appeler ' + c.nom}><Icon name="phone" size={22} color={C.accent} /></Pressable> : null}
             {c ? <Button title="WhatsApp" icon="whatsapp" kind="wa" onPress={() => { stat(l.id, 'wa'); Linking.openURL(c.lien_whatsapp); }} style={{ flex: 1 }} /> : null}
             <Button title="Message" icon="message" onPress={message} loading={starting} style={{ flex: 1 }} />
           </>
